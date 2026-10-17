@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { stressTest, summarize, type Assumptions } from "./model.ts";
 import { scoreReadiness, type AssumptionFlag } from "./readiness.ts";
 import {
-  BENCHMARKS, QUESTIONS, buildSystemPrompt, extractNumbers, factCheckAnswer, flagTopics, parseGrade,
+  BENCHMARKS, PERSONAS, QUESTIONS, RESOURCES, buildSystemPrompt, extractNumbers, factCheckAnswer, flagTopics, parseGrade,
   selectLessons, selectQuestions, weakTopics, type Analysis, type PracticeRecord,
 } from "./knowledge.ts";
 
@@ -24,9 +24,23 @@ const analysis: Analysis = {
 };
 const grade = (q: string, n: number) => ({ questionId: q, evidence: n, clarity: n, accuracy: n, ownership: n });
 
-test("every benchmark has a source link and every question id is unique", () => {
+test("every benchmark and resource has a source link and every question id is unique", () => {
   for (const b of BENCHMARKS) assert.match(b.source.url, /^https:\/\//);
+  for (const r of RESOURCES) assert.match(r.url, /^https:\/\//);
   assert.equal(new Set(QUESTIONS.map((q) => q.id)).size, QUESTIONS.length);
+  assert.equal(QUESTIONS.length, 15);
+});
+
+test("each investor type asks questions that exist", () => {
+  const ids = new Set(QUESTIONS.map((q) => q.id));
+  for (const p of Object.values(PERSONAS)) for (const id of p.questionIds) assert.ok(ids.has(id), `${p.id} → ${id}`);
+  assert.equal(Object.keys(PERSONAS).length, 5);
+});
+
+test("the chosen investor's own questions come first", () => {
+  assert.ok(!selectQuestions(analysis, [], undefined, 15).some((q) => q.id === "concentration"));
+  const qs = selectQuestions(analysis, [], "skeptic", 15).map((q) => q.id);
+  assert.ok(qs.includes("concentration") && !qs.includes("cac"), qs.join(","));
 });
 
 test("flags map to topics by their wording", () => {
@@ -42,28 +56,30 @@ test("questions target this company's biggest risks first", () => {
 
 test("questions answered well are not asked again; weak ones come back", () => {
   const history: PracticeRecord[] = [
-    { questionId: "growth-basis", topic: "growth", grade: grade("growth-basis", 4), coachingNote: "", at: "2026-10-17" },
-    { questionId: "hiring-plan", topic: "burn", grade: grade("hiring-plan", 1), coachingNote: "Tie each hire to a milestone.", at: "2026-10-17" },
+    { questionId: "growth", topic: "growth", grade: grade("growth", 4), coachingNote: "", at: "2026-10-17" },
+    { questionId: "ae-ramp", topic: "burn", grade: grade("ae-ramp", 1), coachingNote: "Tie each hire to a milestone.", at: "2026-10-17" },
   ];
   const ids = selectQuestions(analysis, history).map((q) => q.id);
-  assert.ok(!ids.includes("growth-basis"));
-  assert.ok(ids.includes("hiring-plan"));
+  assert.ok(!ids.includes("growth"));
+  assert.ok(ids.includes("ae-ramp"));
   assert.deepEqual(weakTopics(history), ["burn"]);
 });
 
 test("the system prompt carries rules, numbers, sourced benchmarks, history and lessons", () => {
   const p = buildSystemPrompt({
     mode: "simulate", persona: "skeptic", analysis,
-    history: [{ questionId: "hiring-plan", topic: "burn", grade: grade("hiring-plan", 1), coachingNote: "Tie each hire to a milestone.", at: "2026-10-17" }],
+    history: [{ questionId: "ae-ramp", topic: "burn", grade: grade("ae-ramp", 1), coachingNote: "Tie each hire to a milestone.", at: "2026-10-17" }],
     lessons: [
       { id: "l1", topics: ["burn"], text: "Say 'net burn' not 'burn' when revenue is netted off.", at: "2026-10-17" },
       { id: "l2", topics: ["team"], text: "Unrelated lesson", at: "2026-10-17" },
     ],
   });
-  assert.match(p, /Skeptical numbers partner/);
+  assert.match(p, /Skeptical partner/);
   assert.match(p, /Never calculate, estimate or invent a figure/);
   assert.match(p, /"runwayMonths"/);
   assert.match(p, /saastr\.com/);
+  assert.match(p, /PUBLIC SOURCES/);
+  assert.match(p, /A weak answer:/);
   assert.match(p, /Tie each hire to a milestone/);
   assert.match(p, /net burn/);
   assert.doesNotMatch(p, /Unrelated lesson/);
