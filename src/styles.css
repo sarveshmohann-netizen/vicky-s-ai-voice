@@ -51,8 +51,8 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
+  --font-sans: var(--app-sans);
+  --font-mono: var(--app-mono);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
@@ -71,8 +71,8 @@
 
 :root {
   --radius: 0.5rem;
-  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --app-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --app-mono: "IBM Plex Mono", ui-monospace, monospace;
   --background: oklch(0.985 0.004 240);
   --foreground: oklch(0.22 0.04 255);
   --card: oklch(1 0 0);
@@ -156,6 +156,6 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: var(--font-sans);
+    font-family: var(--app-sans);
   }
 }
