@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LessonsRouteImport } from './routes/lessons'
+import { Route as ApiPublicVickyChatRouteImport } from './routes/api/public/vicky-chat'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +23,40 @@ const LessonsRoute = LessonsRouteImport.update({
   path: '/lessons',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicVickyChatRoute = ApiPublicVickyChatRouteImport.update({
+  id: '/api/public/vicky-chat',
+  path: '/api/public/vicky-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/lessons': typeof LessonsRoute
+  '/api/public/vicky-chat': typeof ApiPublicVickyChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/lessons': typeof LessonsRoute
+  '/api/public/vicky-chat': typeof ApiPublicVickyChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/lessons': typeof LessonsRoute
+  '/api/public/vicky-chat': typeof ApiPublicVickyChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/lessons'
+  fullPaths: '/' | '/lessons' | '/api/public/vicky-chat'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/lessons'
-  id: '__root__' | '/' | '/lessons'
+  to: '/' | '/lessons' | '/api/public/vicky-chat'
+  id: '__root__' | '/' | '/lessons' | '/api/public/vicky-chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LessonsRoute: typeof LessonsRoute
+  ApiPublicVickyChatRoute: typeof ApiPublicVickyChatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LessonsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/vicky-chat': {
+      id: '/api/public/vicky-chat'
+      path: '/api/public/vicky-chat'
+      fullPath: '/api/public/vicky-chat'
+      preLoaderRoute: typeof ApiPublicVickyChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LessonsRoute: LessonsRoute,
+  ApiPublicVickyChatRoute: ApiPublicVickyChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
