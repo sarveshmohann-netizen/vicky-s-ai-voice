@@ -1,5 +1,5 @@
 import { Suspense, useState, type FormEvent } from 'react';
-import { ClientOnly, createFileRoute } from '@tanstack/react-router';
+import { ClientOnly, createFileRoute, Link } from '@tanstack/react-router';
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { BookOpen, Plus, Trash2, LogOut, LockKeyhole, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
