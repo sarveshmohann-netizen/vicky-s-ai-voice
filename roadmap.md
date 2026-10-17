@@ -2,5 +2,8 @@
 - [x] Create practice records and lessons with enforced access and grade validation.
 - [x] Add the lessons admin page with add and delete actions.
 - [x] Verify engine tests, grade validation, access policies, and public sign-in display.
-- [ ] Verify signed-in lessons add/delete — blocked until a team account signs in and receives admin access.
-- [ ] Assign first administrator — waiting for a team member's sign-in identity.
+- [x] Verify signed-in lessons add/delete with the administrator account.
+- [x] Assign sarvesh.mohann@gmail.com as the first administrator.
+- [ ] Create getTidewellAnalysis and getPracticeQuestions using the preserved engine and founder history.
+- [ ] Create Gemini-powered vickyReport, streaming vickyChat, and vickyGrade with lessons and computed analysis.
+- [ ] Verify founder access, grade persistence, malformed-grade retry, streaming, and engine tests.
