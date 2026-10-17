@@ -1,4 +1,5 @@
 # Tasks
+- [ ] Check merged pull request availability in this preview — Tidewell folder is still absent locally.
 - [x] Create practice records and lessons with enforced access and grade validation.
 - [x] Add the lessons admin page with add and delete actions.
 - [x] Verify engine tests, grade validation, access policies, and public sign-in display.
