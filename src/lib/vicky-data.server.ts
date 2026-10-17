@@ -19,8 +19,8 @@ export function practiceFromRows(rows: Tables<'practice_records'>[]) {
   for (const row of rows) {
     const parsed = storedGrade.safeParse(row.grade);
     if (!parsed.success || !isTopic(row.topic)) throw new Error('A saved practice record is invalid.');
-    const { factChecks: checks, ...scores } = parsed.data;
-    history.push({ questionId: row.question_id, topic: row.topic, grade: { ...scores, questionId: row.question_id }, coachingNote: row.coaching_note, at: row.created_at });
+    const { factChecks: checks, flagId, ...scores } = parsed.data;
+    history.push({ questionId: row.question_id, topic: row.topic, grade: { ...scores, ...(flagId ? { flagId } : {}), questionId: row.question_id }, coachingNote: row.coaching_note, at: row.created_at });
     factChecks.push(...(checks ?? []));
   }
   return { history, practice: rows.length ? { answers: history.map(r => r.grade), factChecks } : undefined };

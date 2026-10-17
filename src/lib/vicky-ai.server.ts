@@ -29,7 +29,7 @@ export function createVickyAI() {
   const provider = createLovableAiGatewayProvider(key, getRequestHeader('X-Lovable-AIG-Run-ID'), { baseURL: 'https://ai.gateway.lovable.dev/v1' });
   return {
     stream(system: string, messages: ModelMessage[], signal?: AbortSignal) {
-      return streamText({ model: provider('google/gemini-3.8-flash'), system, messages, abortSignal: signal, maxRetries: 0 });
+      return streamText({ model: provider('google/gemini-3.8-flash'), system, messages, ...(signal ? { abortSignal: signal } : {}), maxRetries: 0 });
     },
     async text(system: string, messages: ModelMessage[]) {
       try {

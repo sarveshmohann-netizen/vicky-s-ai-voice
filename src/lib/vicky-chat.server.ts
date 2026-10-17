@@ -23,12 +23,13 @@ export async function handleVickyChat(request: Request) {
   try {
     const id = assertFounderAccess(userId, parsed.data.founder_id);
     const { analysis, history, lessons } = await loadFounderData(client, id, true);
-    const system = buildSystemPrompt({ mode: parsed.data.mode, persona: parsed.data.persona, analysis: toKnowledgeAnalysis(analysis), history, lessons });
+    const system = buildSystemPrompt({ mode: parsed.data.mode, ...(parsed.data.persona ? { persona: parsed.data.persona } : {}), analysis: toKnowledgeAnalysis(analysis), history, lessons });
     const ai = createVickyAI();
     const result = ai.stream(system, parsed.data.messages, request.signal);
     // Read the first event before sending headers, so upstream denials retain status.
     const iterator = result.fullStream[Symbol.asyncIterator]();
-    const first = await iterator.next();
+    let first = await iterator.next();
+    while (!first.done && first.value.type !== 'text-delta' && first.value.type !== 'error') first = await iterator.next();
     if (!first.done && first.value.type === 'error') throw first.value.error;
     const encoder = new TextEncoder();
     const body = new ReadableStream<Uint8Array>({
