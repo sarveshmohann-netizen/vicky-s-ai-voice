@@ -5,6 +5,11 @@ import { gradeWithRetry } from './vicky-ai.server';
 import { analyzeTidewell, toKnowledgeAnalysis } from './vicky/tidewell/analysis';
 import { QUESTIONS, selectQuestions } from './vicky/knowledge';
 import type { Tables } from '@/integrations/supabase/types';
+import { gradeForFounder } from './vicky-service.server';
+import * as aiModule from './vicky-ai.server';
+import * as dataModule from './vicky-data.server';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/integrations/supabase/types';
 
 const founder = '6997c3be-193f-4536-90da-7e2bf8c4c0a3';
 const valid = JSON.stringify({ evidence: 4, clarity: 3, accuracy: 2, ownership: 1, coachingNote: 'Cite the data.', improvedAnswer: 'Here is the evidence.' });
@@ -48,6 +53,30 @@ describe('grade parsing retry rule', () => {
 });
 
 describe('persisted practice adapters', () => {
+  it('saves the first question topic and code fact checks, not AI-supplied numbers', async () => {
+    vi.spyOn(dataModule, 'loadFounderData').mockResolvedValueOnce({ analysis: analyzeTidewell(), history: [], lessons: [] });
+    vi.spyOn(aiModule, 'createVickyAI').mockReturnValueOnce({ text: vi.fn().mockResolvedValue(valid) } as unknown as ReturnType<typeof aiModule.createVickyAI>);
+    const insert = vi.fn().mockResolvedValue({ error: null });
+    const client = { from: vi.fn().mockReturnValue({ insert }) } as unknown as SupabaseClient<Database>;
+    const answer = QUESTIONS.find(q => q.id === 'arr')?.strongAnswer ?? '';
+    const result = await gradeForFounder(client, founder, { founder_id: founder, questionId: 'arr', answer });
+    expect(insert.mock.calls[0]?.[0].topic).toBe('growth');
+    expect(insert.mock.calls[0]?.[0].founder_id).toBe(founder);
+    expect('factChecks' in result && result.factChecks).toEqual(insert.mock.calls[0]?.[0].grade.factChecks);
+    expect(insert.mock.calls[0]?.[0].grade.evidence).toBe(4);
+    vi.restoreAllMocks();
+  });
+  it('returns an error and saves nothing when both grade replies are unusable', async () => {
+    vi.spyOn(dataModule, 'loadFounderData').mockResolvedValueOnce({ analysis: analyzeTidewell(), history: [], lessons: [] });
+    const text = vi.fn().mockResolvedValue('not a grade');
+    vi.spyOn(aiModule, 'createVickyAI').mockReturnValueOnce({ text } as unknown as ReturnType<typeof aiModule.createVickyAI>);
+    const from = vi.fn();
+    const result = await gradeForFounder({ from } as unknown as SupabaseClient<Database>, founder, { founder_id: founder, questionId: 'arr', answer: 'An answer.' });
+    expect(result).toHaveProperty('error');
+    expect(text).toHaveBeenCalledTimes(2);
+    expect(from).not.toHaveBeenCalled();
+    vi.restoreAllMocks();
+  });
   it('passes saved answers into readiness and preserves engine results', () => {
     const { practice } = practiceFromRows([row]);
     const analysis = analyzeTidewell(practice);
