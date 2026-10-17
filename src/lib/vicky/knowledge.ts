@@ -8,7 +8,7 @@
 import type { Summary, StressResult } from "./model.ts";
 import type { AnswerGrade, AssumptionFlag, FactCheck, ReadinessResult } from "./readiness.ts";
 
-export type Topic = "growth" | "retention" | "churn" | "cac" | "burn" | "runway" | "margin" | "use-of-funds" | "team" | "market";
+export type Topic = "growth" | "retention" | "churn" | "cac" | "burn" | "runway" | "margin" | "use-of-funds" | "team" | "market" | "concentration" | "valuation";
 
 // --- Knowledge base ----------------------------------------------------------
 
@@ -32,41 +32,122 @@ export const BENCHMARKS: Benchmark[] = [
 
 export interface Question {
   id: string;
+  number?: number; // position in the organisers' pack, Appendix D
   topics: Topic[];
   question: string;
-  testing: string; // what the investor is really checking
+  testing: string; // why the investor asks
+  weakAnswer?: string; // what an unprepared founder says
   strongAnswer: string; // the shape of a strong answer, not a script
 }
 
+// The 15 questions from the organisers' Supporting Resources, Appendix D, in
+// the order investors usually ask them. Strong answers quote Tidewell's own
+// numbers, which tidewell/metrics.ts reproduces.
+const D = (n: number, id: string, topics: Topic[], question: string, testing: string, weakAnswer: string, strongAnswer: string): Question =>
+  ({ id, number: n, topics, question, testing, weakAnswer, strongAnswer });
+
 export const QUESTIONS: Question[] = [
-  { id: "growth-basis", topics: ["growth"], question: "Your forecast grows faster than your history. What changes to make that happen?", testing: "Whether the forecast is tied to a real driver or is a hopeful line.", strongAnswer: "Names the specific driver (new channel, pricing, sales hire), shows early evidence from your own data, and says what happens if it is slower." },
-  { id: "growth-downside", topics: ["growth", "runway"], question: "If growth comes in at half your plan, how long does the money last?", testing: "Whether you know your downside and have a plan B.", strongAnswer: "Gives the runway number under the slower case and the cost levers you would pull, in order." },
-  { id: "churn-why", topics: ["churn", "retention"], question: "Why do customers leave, and what are you doing about it?", testing: "Whether you understand retention, the base of every SaaS valuation.", strongAnswer: "Gives the churn rate, the top reasons from real customer conversations, and one fix with early results." },
-  { id: "expansion", topics: ["retention"], question: "Do existing customers spend more over time?", testing: "Net retention: whether revenue grows without new customers.", strongAnswer: "States net revenue retention or upsell examples, with numbers." },
-  { id: "cac-channel", topics: ["cac"], question: "What does it cost you to win a customer, and how long until you earn it back?", testing: "Unit economics: whether growth gets cheaper or more expensive as you scale.", strongAnswer: "Gives CAC and payback months by channel, and which channel the raise will fund." },
-  { id: "burn-efficiency", topics: ["burn"], question: "For every dollar you burn, how much new revenue do you add?", testing: "Capital efficiency, the burn multiple.", strongAnswer: "Gives the ratio, compares it to the 1-2x benchmark, and explains the plan to improve it." },
-  { id: "hiring-plan", topics: ["burn", "team"], question: "Your plan adds a lot of people. Why these roles, and when do they pay off?", testing: "Whether headcount is the cost driver and is tied to milestones.", strongAnswer: "Maps each hire to a milestone and shows what happens to runway if hires are delayed." },
-  { id: "margin-path", topics: ["margin"], question: "What is your gross margin, and how does it change at scale?", testing: "Whether this is a software-margin business or services in disguise.", strongAnswer: "States the margin, what is in cost of goods, and the specific costs that fall with scale." },
-  { id: "runway-milestone", topics: ["runway", "use-of-funds"], question: "What milestones does this round get you to, and is there enough runway to hit them?", testing: "Whether the raise is sized to reach the next round's metrics with buffer.", strongAnswer: "Names the milestones for the next round, the month you expect to hit them, and the months of buffer left." },
-  { id: "use-of-funds", topics: ["use-of-funds"], question: "Walk me through how you will spend the money.", testing: "Whether the founders have a plan or just a number.", strongAnswer: "Splits the raise into 3-4 buckets with amounts, each tied to a milestone." },
-  { id: "biggest-risk", topics: ["runway", "burn", "growth"], question: "What is the one number in this plan you are least sure about?", testing: "Self-awareness: founders who name their own weak spot earn trust.", strongAnswer: "Names it honestly, explains why, and says how you will know early if it is off." },
-  { id: "missing-data", topics: ["cac", "churn"], question: "I don't see this metric in your materials. Do you track it?", testing: "Whether missing data is an oversight or something being hidden.", strongAnswer: "Admits the gap, gives the best available estimate clearly labelled, and a date when it will be tracked." },
+  D(1, "arr", ["growth"], "What is your ARR, and how do you calculate it?", "Whether the founder knows the difference between recurring and one-time revenue.", "$1.37M.", "$1.29M. That's September MRR of $107,189 times 12. We leave out onboarding fees because they don't repeat. They were $108,600 over the last 12 months."),
+  D(2, "growth", ["growth"], "How fast are you growing?", "Growth rate drives almost every other question, including how much the round is worth to them.", "10% month over month.", "MRR went from $38K to $107K in the 12 months to September, about 9% a month compounded. About $10K of that is Northern Comfort Group; without them it's about 8%. Growth slowed to about 5% a month from July to September, and here is why."),
+  D(3, "churn", ["churn", "retention"], "What is your churn?", "SMB software lives or dies on churn. High churn means growth has to work harder just to stand still.", "Around 1%. Most of it was early customers on the old product.", "2.0% of customers a month over the last 12 months, 1.6% over the last six. Most churn is early: about 3.3% a month in the first six months on monthly plans, 1.4% after. So onboarding effort goes into the first 90 days."),
+  D(4, "nrr", ["retention"], "What is your net revenue retention?", "Whether existing customers grow or shrink over time: how much growth comes for free.", "Above 110%.", "Customers paying $38.0K a month in September 2025 pay $33.3K today, so NRR is about 88% and gross retention about 81%. Seat expansion is small. It's the number we most want to improve."),
+  D(5, "gross-margin", ["margin"], "What is your gross margin?", "How much of each dollar of revenue can pay for growth.", "92%.", "92% counting only hosting, SMS and card fees. Including customer support, as most SaaS investors do, it's 74% over the last 12 months."),
+  D(6, "cac", ["cac"], "What does it cost you to win a customer, and how long to earn it back?", "Whether more sales and marketing money turns into profitable growth.", "$970, paid back in under 3 months.", "Fully loaded, about $3,200 per customer: $491,000 of sales and marketing salaries, commissions and programs over 153 new customers. A new customer brings about $458 of MRR, so payback is about 9 to 10 months on a margin that includes support."),
+  D(7, "forecast-assumptions", ["churn", "growth"], "Your forecast assumes churn drops to 1% and a 20% price increase with no extra churn. Why?", "A forecast is only as credible as its weakest assumption; investors test the ones that move the result most.", "We're confident in the product.", "Fair challenge. Churn has been 2.0%, 1.6% recently, so 1% is a target, not a trend; we have a version at 2%. Annual customers can't be repriced until renewal and 59 are on the legacy $39 price, so we'd phase it in and expect some churn. Here's the plan if both go against us."),
+  D(8, "ae-ramp", ["growth", "team", "burn"], "How fast do new account executives ramp, and how many deals will they close?", "The hiring plan only works if new reps produce. Ramp time is where most seed forecasts break.", "One month. The product is easy to demo.", "Our two reps took about three months to reach 4 or 5 new customers a month. The plan assumes one month; we're moving it to three and will show the revised numbers."),
+  D(9, "concentration", ["concentration", "retention"], "How dependent are you on Northern Comfort Group?", "One customer can make a small company look bigger than it is, and a renewal can go either way.", "They're expanding to 600 seats next year.", "About 10% of MRR, renewing March 2027. Their COO wants every location on Tidewell, but nothing is signed, so the base plan keeps them at 260 seats and shows expansion as upside."),
+  D(10, "runway", ["runway", "use-of-funds"], "Why $4M, and how long does it last?", "Whether the founders understand their burn and have planned for the next round.", "24 months of runway.", "On our plan, cash lasts to about November 2028, roughly 22 months after a January close. At the growth we've actually achieved it's closer to 17, so we'd raise again in late 2027. Here are the milestones and where we'd slow hiring."),
+  D(11, "raise-slips", ["runway", "burn"], "What happens if the round takes longer than you expect?", "Founders who run out of money mid-raise lose their negotiating position.", "It won't. We have strong interest.", "We have $483K and burn about $58K a month, so about 8 months. Our plan raises marketing from October; if the round slipped to April, that plan runs out of cash in March. So we're holding spend at today's level until a term sheet is signed."),
+  D(12, "tam", ["market"], "Your deck says $2B TAM. Where does that come from?", "A large unsourced number tells an investor the founder hasn't done the work.", "Industry reports.", "We haven't built it bottom-up yet, so we've taken it off the slide. Method: trades businesses with 3 to 30 technicians in Canada and the US, times seats, times price, sourced from Statistics Canada and the US Census Bureau."),
+  D(13, "competition", ["market"], "Why will you win against Jobber, Housecall Pro and ServiceTitan?", "Whether the founder knows why customers choose them.", "Our product is better.", "We don't track win/loss in a system yet, which we're fixing. Here is what customers who switched told us. (The data pack has no competitor or win/loss data: help the founder find evidence, never invent it.)"),
+  D(14, "milestones", ["use-of-funds", "growth", "runway"], "What will this round get you to, and what is the biggest risk?", "Investors fund a path to the next round, not a budget.", "Series A at $5M ARR.", "Our plan reaches about $5.1M ARR by March 2028. The Series A milestones are churn under a stated target, a repeatable rep ramp and Northern Comfort renewed. The biggest risk is growth staying near 5% while we triple the team; if churn or rep productivity miss for two quarters, we slow hiring."),
+  D(15, "valuation", ["valuation"], "What valuation are you looking for?", "Whether expectations are realistic, and sometimes to anchor the negotiation.", "A number with no reasoning, or 'whatever the market says'.", "We'd like the lead to propose terms. Here are our metrics, the round size and the two SAFEs converting at this round with $10M and $15M caps. (Vicky explains how valuation, dilution and SAFE conversion work, but never recommends a valuation.)"),
 ];
 
-export type PersonaId = "seed-saas" | "skeptic" | "angel";
+export type PersonaId = "lead-seed" | "angel-operator" | "strategic" | "gov-fund" | "skeptic";
 
 export interface Persona {
   id: PersonaId;
   name: string;
+  cheque: string;
   focus: Topic[];
+  evaluates: string;
+  saysNoWhen: string;
   style: string;
+  questionIds: string[]; // Appendix D questions this investor asks first
+  ownQuestions: string[]; // questions only this investor type asks
 }
 
+// The five investor archetypes from Supporting Resources, Appendix E. Not real firms or people.
 export const PERSONAS: Record<PersonaId, Persona> = {
-  "seed-saas": { id: "seed-saas", name: "Seed SaaS partner", focus: ["growth", "retention", "cac", "use-of-funds"], style: "Friendly but data-driven. Wants to see the path from this round to Series A metrics." },
-  skeptic: { id: "skeptic", name: "Skeptical numbers partner", focus: ["burn", "runway", "margin", "churn"], style: "Direct and probing. Pushes on every flagged assumption and asks for the downside case." },
-  angel: { id: "angel", name: "Angel or operator", focus: ["team", "market", "growth"], style: "Conversational. Cares about the founders and the customer pain, and whether they truly understand their numbers." },
+  "lead-seed": {
+    id: "lead-seed", name: "Lead seed fund partner", cheque: "$1.5M to $3M, sets the terms",
+    focus: ["growth", "retention", "burn", "cac", "runway"],
+    evaluates: "MRR × 12 with no one-time fees; NRR and GRR by cohort; burn multiple; CAC payback on a margin that includes support; whether forecast drivers match history; runway to the next round.",
+    saysNoWhen: "Inflated metrics, or a forecast they can't trace to history.",
+    style: "Calm, precise, asks for the spreadsheet. Follows a number down two or three levels: how did you get 1%? Which months? Which customers?",
+    questionIds: ["arr", "growth", "churn", "nrr", "cac", "forecast-assumptions", "runway"], ownQuestions: [],
+  },
+  "angel-operator": {
+    id: "angel-operator", name: "Angel operator", cheque: "$25K to $150K",
+    focus: ["team", "churn", "growth", "market"],
+    evaluates: "Why these founders and how fast they learn; specific customers who love it or left; how a deal actually closes; whether the founders know their numbers without looking.",
+    saysNoWhen: "Founders who can't explain their own numbers.",
+    style: "Conversational and warm, but stops the meeting if a founder bluffs. Asks for a story, then the number behind it.",
+    questionIds: ["churn", "ae-ramp", "competition"], ownQuestions: ["Tell me about the last customer who churned.", "Walk me through Priya's last deal."],
+  },
+  strategic: {
+    id: "strategic", name: "Strategic investor", cheque: "$250K to $1M",
+    focus: ["market", "concentration", "use-of-funds"],
+    evaluates: "How Tidewell helps their own customers and channel; whether the referral channel could scale through them; what data Tidewell holds and who owns it; whether investing limits other partnerships.",
+    saysNoWhen: "Conflicts with their partners, or unclear exclusivity.",
+    style: "Friendly and long-term, slower to decide. May ask for rights the founders should think hard about, such as information rights or a right of first refusal.",
+    questionIds: ["concentration", "competition", "milestones"], ownQuestions: ["How many of your customers buy from distributors like us?", "What would you need from us to grow the referral channel?"],
+  },
+  "gov-fund": {
+    id: "gov-fund", name: "Government-backed fund", cheque: "Co-invests beside a private lead",
+    focus: ["team", "runway", "use-of-funds"],
+    evaluates: "A credible private lead; Canadian headquarters, jobs and IP; governance, board and financial controls; use of non-dilutive funding such as SR&ED.",
+    saysNoWhen: "No private lead, weak governance, or IP held outside Canada.",
+    style: "Thorough and process-driven. Asks for documents. Interested in the finance function, which Tidewell does not have yet.",
+    questionIds: ["runway", "milestones"], ownQuestions: ["Who prepares your financial statements?", "How are the SR&ED claims prepared and recorded?", "Who will lead the round?"],
+  },
+  skeptic: {
+    id: "skeptic", name: "Skeptical partner", cheque: "None; votes in the partner meeting",
+    focus: ["growth", "concentration", "churn", "market", "runway"],
+    evaluates: "The one weakness that breaks the story: concentration, slowing growth, a forecast built on hope, a better-funded competitor.",
+    saysNoWhen: "Any claim that falls apart under one follow-up question.",
+    style: "Blunt. Interrupts. Asks 'so what?' after every answer.",
+    questionIds: ["growth", "concentration", "forecast-assumptions", "competition"], ownQuestions: ["Growth went from 9% to 5% a month. Why shouldn't I assume it keeps falling?", "If Northern Comfort leaves, what does your growth look like?", "Why won't Jobber just copy this?"],
+  },
 };
+
+// Public sources from Supporting Resources, Appendix F (links checked by the organisers on Oct 14 2026).
+// Vicky links to these instead of quoting unsourced benchmarks.
+export interface Resource { title: string; publisher: string; url: string; topics: Topic[] | "all" }
+export const RESOURCES: Resource[] = [
+  { title: "How to Pitch Your Startup", publisher: "Y Combinator", url: "https://www.ycombinator.com/library/6q-how-to-pitch-your-startup", topics: "all" },
+  { title: "How to build your seed round pitch deck", publisher: "Y Combinator", url: "https://www.ycombinator.com/library/2u-how-to-build-your-seed-round-pitch-deck", topics: "all" },
+  { title: "Writing a Business Plan", publisher: "Sequoia Capital", url: "https://www.sequoiacap.com/article/writing-a-business-plan/", topics: ["market"] },
+  { title: "A guide to seed fundraising", publisher: "Y Combinator", url: "https://www.ycombinator.com/library/4A-a-guide-to-seed-fundraising", topics: ["use-of-funds", "valuation"] },
+  { title: "How to Raise Money", publisher: "Paul Graham", url: "https://paulgraham.com/fr.html", topics: ["runway", "valuation"] },
+  { title: "Default Alive or Default Dead?", publisher: "Paul Graham", url: "https://paulgraham.com/aord.html", topics: ["burn", "runway"] },
+  { title: "16 Startup Metrics", publisher: "Andreessen Horowitz", url: "https://a16z.com/16-startup-metrics/", topics: ["growth", "cac", "churn", "retention"] },
+  { title: "The Burn Multiple", publisher: "David Sacks", url: "https://sacks.substack.com/p/the-burn-multiple-51a7e43cb200", topics: ["burn"] },
+  { title: "10 laws of cloud", publisher: "Bessemer Venture Partners", url: "https://www.bvp.com/atlas/10-laws-of-cloud", topics: ["growth", "retention", "margin"] },
+  { title: "Five ways to build a $100 million business", publisher: "Christoph Janz", url: "https://christophjanz.blogspot.com/2014/10/five-ways-to-build-100-million-business.html", topics: ["market", "cac"] },
+  { title: "The SAFE", publisher: "Y Combinator", url: "https://www.ycombinator.com/documents", topics: ["valuation"] },
+  { title: "State of Private Markets: Q1 2026 (US data)", publisher: "Carta", url: "https://carta.com/data/state-of-private-markets-q1-2026/", topics: ["valuation"] },
+  { title: "CVCA market reports", publisher: "CVCA", url: "https://www.cvca.ca/research-insight/market-reports/", topics: ["valuation"] },
+  { title: "How to pitch your business to venture capital investors", publisher: "BDC", url: "https://www.bdc.ca/en/articles-tools/start-buy-business/start-business/how-pitch-your-business-venture-capital-investors", topics: "all" },
+  { title: "BDC Seed Venture Fund", publisher: "BDC Capital", url: "https://www.bdc.ca/en/bdc-capital/venture-capital/funds/seed-fund", topics: ["team"] },
+  { title: "SR&ED tax incentives", publisher: "Canada Revenue Agency", url: "https://www.canada.ca/en/revenue-agency/services/scientific-research-experimental-development-tax-incentive-program.html", topics: ["runway", "burn"] },
+];
+
+export function selectResources(topics: Iterable<Topic>, max = 6): Resource[] {
+  const set = new Set(topics);
+  return RESOURCES.filter((r) => r.topics === "all" || r.topics.some((t) => set.has(t))).slice(0, max);
+}
 
 export const RUBRIC =
   "Grade the answer 0-4 on each criterion. evidence: cites the company's own data. clarity: plain, direct, answers the question asked. accuracy: every number and claim matches the provided data. ownership: acknowledges weaknesses and gives a plan.";
@@ -91,10 +172,11 @@ export interface Lesson {
 }
 
 export interface Analysis {
-  summary: Summary;
-  stress: StressResult[];
   readiness: ReadinessResult;
   flags: AssumptionFlag[];
+  summary?: Summary; // from the what-if model, when one has been run
+  stress?: StressResult[];
+  numbers?: unknown; // company figures pre-computed in code, e.g. tidewell/analysis.ts
 }
 
 // --- Selection ------------------------------------------------------------------
@@ -109,8 +191,12 @@ const FLAG_KEYWORDS: [RegExp, Topic][] = [
   [/margin|cogs|cost of goods/i, "margin"],
   [/hire|headcount|salar|payroll|burn|opex|spend/i, "burn"],
   [/cac|acquisition|payback|marketing/i, "cac"],
-  [/runway|cash/i, "runway"],
+  [/runway|cash|sr&ed|refund|deferred/i, "runway"],
   [/use of funds|raise/i, "use-of-funds"],
+  [/ramp|account executive|price/i, "growth"],
+  [/northern comfort|concentration|one customer/i, "concentration"],
+  [/expansion|seat/i, "retention"],
+  [/\btam\b|market size/i, "market"],
 ];
 
 export function flagTopics(flag: AssumptionFlag): Topic[] {
@@ -125,8 +211,9 @@ export function topicWeights(a: Analysis, history: PracticeRecord[] = [], person
   const w = new Map<Topic, number>();
   const add = (t: Topic, n: number) => w.set(t, (w.get(t) ?? 0) + n);
   for (const f of a.flags) for (const t of flagTopics(f)) add(t, f.severity === "high" ? 3 : f.severity === "medium" ? 2 : 0.5);
-  a.stress.filter((s) => s.monthsLost > 0).slice(0, 2).forEach((s, i) => add(DRIVER_TOPIC[s.driver], 2 - i * 0.5));
-  if (a.summary.runwayMonths !== null && a.summary.runwayMonths < 18) add("runway", 2);
+  (a.stress ?? []).filter((s) => s.monthsLost > 0).slice(0, 2).forEach((s, i) => add(DRIVER_TOPIC[s.driver], 2 - i * 0.5));
+  const runway = a.summary?.runwayMonths ?? null;
+  if (runway !== null && runway < 18) add("runway", 2);
   for (const t of weakTopics(history)) add(t, 1.5);
   if (persona) for (const t of PERSONAS[persona].focus) add(t, 1);
   return w;
@@ -143,8 +230,9 @@ export function weakTopics(history: PracticeRecord[]): Topic[] {
 export function selectQuestions(a: Analysis, history: PracticeRecord[] = [], persona?: PersonaId, n = 5): Question[] {
   const w = topicWeights(a, history, persona);
   const mastered = new Set(history.filter((r) => gradeQuality(r.grade) >= 0.75).map((r) => r.questionId));
+  const preferred = persona ? PERSONAS[persona].questionIds : [];
   return QUESTIONS.filter((q) => !mastered.has(q.id))
-    .map((q, i) => ({ q, i, score: q.topics.reduce((s, t) => s + (w.get(t) ?? 0), 0) }))
+    .map((q, i) => ({ q, i, score: q.topics.reduce((s, t) => s + (w.get(t) ?? 0), 0) + (preferred.includes(q.id) ? 3 : 0) }))
     .filter((x) => x.score > 0)
     .sort((x, y) => y.score - x.score || x.i - y.i)
     .slice(0, n)
@@ -195,7 +283,7 @@ export function buildSystemPrompt(c: ContextInput): string {
 
   const role =
     c.mode === "simulate" && persona
-      ? `You are Vicky playing ${persona.name}, an investor in a mock fundraising meeting. ${persona.style} Ask ONE question at a time. Follow up when an answer is vague or a number does not match COMPANY NUMBERS. After 5 questions, give a scorecard on financial accuracy, clarity and preparedness, with one concrete tip per answer.`
+      ? `You are Vicky playing a ${persona.name} (${persona.cheque}), an investor in a mock fundraising meeting. You evaluate: ${persona.evaluates} You say no when: ${persona.saysNoWhen} ${persona.style}${persona.ownQuestions.length ? ` Questions you like to ask: ${persona.ownQuestions.map((q) => `"${q}"`).join(" ")}` : ""} Ask ONE question at a time. Follow up when an answer is vague or a number does not match COMPANY NUMBERS. After 5 questions, give a scorecard on financial accuracy, clarity and preparedness, with one concrete tip per answer.`
       : c.mode === "report"
         ? "You are Vicky, an AI investor coach. Write a Readiness Report for the founder from COMPANY NUMBERS: the score and what drives it, the riskiest assumptions, and the three actions that would most improve their readiness."
         : "You are Vicky, an AI investor coach. Answer the founder's questions about their own financials and how investors will see them.";
@@ -204,7 +292,7 @@ export function buildSystemPrompt(c: ContextInput): string {
     role,
     "RULES\n" + RULES.map((r, i) => `${i + 1}. ${r}`).join("\n"),
     "COMPANY NUMBERS (computed by tested code; the only figures you may use)\n" +
-      JSON.stringify({ summary: c.analysis.summary, stressTest: c.analysis.stress, readiness: { score: c.analysis.readiness.score, band: c.analysis.readiness.band, coverage: c.analysis.readiness.coverage, components: c.analysis.readiness.components }, flags: c.analysis.flags }, null, 1),
+      JSON.stringify({ ...(c.analysis.numbers !== undefined ? { company: c.analysis.numbers } : {}), ...(c.analysis.summary ? { summary: c.analysis.summary } : {}), ...(c.analysis.stress ? { stressTest: c.analysis.stress } : {}), readiness: { score: c.analysis.readiness.score, band: c.analysis.readiness.band, coverage: c.analysis.readiness.coverage, components: c.analysis.readiness.components }, flags: c.analysis.flags }, null, 1),
   ];
 
   const benchmarks = selectBenchmarks(topics);
@@ -213,9 +301,12 @@ export function buildSystemPrompt(c: ContextInput): string {
   if (questions.length) {
     sections.push(
       (c.mode === "simulate" ? "QUESTIONS TO ASK, in this order of priority" : "WHAT INVESTORS WILL PROBE FOR THIS COMPANY") + "\n" +
-        questions.map((q) => `- [${q.id}] ${q.question}\n  Testing: ${q.testing}\n  A strong answer: ${q.strongAnswer}`).join("\n"),
+        questions.map((q) => `- [${q.id}] ${q.question}\n  Why they ask: ${q.testing}${q.weakAnswer ? `\n  A weak answer: ${q.weakAnswer}` : ""}\n  A strong answer: ${q.strongAnswer}`).join("\n"),
     );
   }
+
+  const resources = selectResources(topics);
+  if (resources.length) sections.push("PUBLIC SOURCES (link to these; never cite an unsourced benchmark)\n" + resources.map((r) => `- ${r.title}, ${r.publisher}: ${r.url}`).join("\n"));
 
   if (recentNotes.length) {
     sections.push("FOUNDER'S WEAK SPOTS FROM PAST PRACTICE (revisit these)\n" + recentNotes.map((r) => `- ${r.topic}: ${r.coachingNote}`).join("\n"));
@@ -237,7 +328,7 @@ export function gradingPrompt(question: Question, answer: string, a: Analysis): 
     `QUESTION: ${question.question}`,
     `WHAT THE INVESTOR IS TESTING: ${question.testing}`,
     `A STRONG ANSWER: ${question.strongAnswer}`,
-    `COMPANY NUMBERS: ${JSON.stringify(a.summary)}`,
+    `COMPANY NUMBERS: ${JSON.stringify(a.numbers ?? a.summary ?? {})}`,
     `FOUNDER'S ANSWER: ${answer}`,
   ].join("\n");
 }
