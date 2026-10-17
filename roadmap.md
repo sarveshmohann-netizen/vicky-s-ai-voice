@@ -8,3 +8,4 @@
 - [x] Create getTidewellAnalysis and getPracticeQuestions using the preserved engine.
 - [x] Create Gemini-powered vickyReport, streaming vickyChat, and vickyGrade using the engine’s five personas.
 - [x] Verify founder access, grade persistence, malformed-grade retry, streaming, and engine tests.
+- [x] Four-screen Vicky app (Analyze, Ask, Prepare, Simulate) with June Analytics branding
