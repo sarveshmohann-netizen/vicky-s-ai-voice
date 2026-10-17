@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AskRouteImport } from './routes/ask'
 import { Route as LessonsRouteImport } from './routes/lessons'
+import { Route as PrepareRouteImport } from './routes/prepare'
 import { Route as SimulateRouteImport } from './routes/simulate'
 import { Route as ApiPublicVickyChatRouteImport } from './routes/api/public/vicky-chat'
 
@@ -30,6 +31,11 @@ const LessonsRoute = LessonsRouteImport.update({
   path: '/lessons',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrepareRoute = PrepareRouteImport.update({
+  id: '/prepare',
+  path: '/prepare',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SimulateRoute = SimulateRouteImport.update({
   id: '/simulate',
   path: '/simulate',
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ask': typeof AskRoute
   '/lessons': typeof LessonsRoute
+  '/prepare': typeof PrepareRoute
   '/simulate': typeof SimulateRoute
   '/api/public/vicky-chat': typeof ApiPublicVickyChatRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ask': typeof AskRoute
   '/lessons': typeof LessonsRoute
+  '/prepare': typeof PrepareRoute
   '/simulate': typeof SimulateRoute
   '/api/public/vicky-chat': typeof ApiPublicVickyChatRoute
 }
@@ -60,19 +68,33 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/ask': typeof AskRoute
   '/lessons': typeof LessonsRoute
+  '/prepare': typeof PrepareRoute
   '/simulate': typeof SimulateRoute
   '/api/public/vicky-chat': typeof ApiPublicVickyChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ask' | '/lessons' | '/simulate' | '/api/public/vicky-chat'
+  fullPaths:
+    | '/'
+    | '/ask'
+    | '/lessons'
+    | '/prepare'
+    | '/simulate'
+    | '/api/public/vicky-chat'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ask' | '/lessons' | '/simulate' | '/api/public/vicky-chat'
+  to:
+    | '/'
+    | '/ask'
+    | '/lessons'
+    | '/prepare'
+    | '/simulate'
+    | '/api/public/vicky-chat'
   id:
     | '__root__'
     | '/'
     | '/ask'
     | '/lessons'
+    | '/prepare'
     | '/simulate'
     | '/api/public/vicky-chat'
   fileRoutesById: FileRoutesById
@@ -81,6 +103,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AskRoute: typeof AskRoute
   LessonsRoute: typeof LessonsRoute
+  PrepareRoute: typeof PrepareRoute
   SimulateRoute: typeof SimulateRoute
   ApiPublicVickyChatRoute: typeof ApiPublicVickyChatRoute
 }
@@ -108,6 +131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LessonsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/prepare': {
+      id: '/prepare'
+      path: '/prepare'
+      fullPath: '/prepare'
+      preLoaderRoute: typeof PrepareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/simulate': {
       id: '/simulate'
       path: '/simulate'
@@ -129,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AskRoute: AskRoute,
   LessonsRoute: LessonsRoute,
+  PrepareRoute: PrepareRoute,
   SimulateRoute: SimulateRoute,
   ApiPublicVickyChatRoute: ApiPublicVickyChatRoute,
 }
