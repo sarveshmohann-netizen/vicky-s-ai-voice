@@ -107,8 +107,8 @@ function Readiness({ r }: { r: Awaited<ReturnType<typeof getTidewellAnalysis>>['
     <div className="grid divide-y divide-border md:grid-cols-2 md:divide-x md:divide-y-0 lg:grid-cols-3">{r.components.map(c => <div key={c.id} className="border-border p-5 [&:nth-child(n+3)]:md:border-t lg:[&:nth-child(n+3)]:border-t-0 lg:[&:nth-child(n+4)]:border-t">
       <div className="mb-2 flex items-baseline justify-between gap-2"><h3 className="text-sm font-semibold">{c.label}</h3>
         <span className="font-mono text-sm">{c.assessed ? `${Math.round(c.earned * 10) / 10}/${c.max}` : <span className="text-muted-foreground">Not assessed</span>}</span></div>
-      {c.evidence.length > 0 && <ul className="mb-2 space-y-1 text-xs text-muted-foreground">{c.evidence.map(e => <li key={e}>• {e}</li>)}</ul>}
-      {c.nextSteps.length > 0 && <ul className="space-y-1 text-xs">{c.nextSteps.map(s => <li key={s} className="text-foreground">→ {s}</li>)}</ul>}
+      {c.nextSteps.length > 0 && <details className="group mb-2" open={c.nextSteps.length <= 2}><summary className="flex cursor-pointer list-none items-center gap-1 text-xs font-medium text-accent">Next steps ({c.nextSteps.length}) <ChevronDown className="size-3 transition-transform group-open:rotate-180" /></summary><ul className="mt-1.5 space-y-1 text-xs">{c.nextSteps.map(s => <li key={s}>→ {s}</li>)}</ul></details>}
+      {c.evidence.length > 0 && <details className="group"><summary className="flex cursor-pointer list-none items-center gap-1 text-xs font-medium text-muted-foreground">Evidence ({c.evidence.length}) <ChevronDown className="size-3 transition-transform group-open:rotate-180" /></summary><ul className="mt-1.5 space-y-1 text-xs text-muted-foreground">{c.evidence.map(e => <li key={e}>• {e}</li>)}</ul></details>}
     </div>)}</div>
     <p className="border-t border-border bg-muted px-5 py-3 text-xs text-muted-foreground">{r.disclaimer}</p>
   </section>;
