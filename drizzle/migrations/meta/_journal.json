@@ -1,5 +1,13 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792276074926,
+      "tag": "0000_create_practice_records_and_admin_lessons",
+      "breakpoints": true
+    }
+  ]
 }
