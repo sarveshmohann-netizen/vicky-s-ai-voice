@@ -17,3 +17,6 @@
 - Keep Vicky RPC exports in a client-safe functions module and AI/storage helpers server-only, so secrets and prompts never ship to browsers.
 - Stream Vicky chat through a bearer-verified HTTP route reached from its RPC entry point; RPC returns only serializable data, not a Response or stream.
 - Persist optional assumption flag IDs and code-produced fact checks inside practice grade JSON alongside rubric scores, so readiness can reconstruct practice without extra tables or invented evidence.
+- Keep investor and stage preferences in validated route search parameters shared by meeting prep and practice; this makes demo links reproducible.
+- Render meeting charts and briefs from the read-only engine output, with shared source-chip parsing outside the engine; this prevents duplicated financial calculations and keeps citations consistent.
+- Combine coaching chat, question grading and pitch simulation in the Practice route; this keeps the demo in one navigation flow.
