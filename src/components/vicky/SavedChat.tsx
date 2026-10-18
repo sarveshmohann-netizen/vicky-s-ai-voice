@@ -31,7 +31,7 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SourceChip } from "./Sources";
-import { sourceTags } from "./Markdown";
+import { sourceTags, chatHeadingParagraphs } from "./Markdown";
 import { startVickyChat } from "@/lib/vicky-chat";
 import { vickyGrade } from "@/lib/vicky.functions";
 import { loadConversation } from "@/lib/conversations.functions";
@@ -126,6 +126,7 @@ export function SavedChat({
         {
           id: "pending",
           conversation_id: conversation.id,
+          company_id: conversation.company_id,
           role: "user",
           content: content.trim(),
           created_at: new Date().toISOString(),
@@ -154,6 +155,7 @@ export function SavedChat({
         {
           founder_id: conversation.founder_id,
           conversation_id: conversation.id,
+          company_id: conversation.company_id,
           action,
           message_id: messageId,
           ...{ mode: conversation.mode, persona: conversation.persona, stage: conversation.stage },
@@ -229,6 +231,7 @@ export function SavedChat({
       await restore();
       await cache.invalidateQueries({ queryKey: ["analysis"] });
       await cache.invalidateQueries({ queryKey: ["meeting-brief"] });
+      await cache.invalidateQueries({ queryKey: ["company-dashboard"] });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not grade this answer.");
     } finally {
@@ -301,7 +304,7 @@ export function SavedChat({
                   className={
                     m.role === "user"
                       ? "group-[.is-user]:bg-primary group-[.is-user]:text-primary-foreground"
-                      : "w-full overflow-visible"
+                      : "w-full max-w-[65ch] overflow-visible text-[15px] leading-7"
                   }
                 >
                   {isGradeMessage(m) ? (
@@ -310,7 +313,7 @@ export function SavedChat({
                     <p className="whitespace-pre-wrap text-[15px]">{m.content}</p>
                   ) : (
                     <MessageResponse
-                      remarkPlugins={[sourceTags]}
+                      remarkPlugins={[sourceTags, chatHeadingParagraphs]}
                       components={{
                         a: ({ href, children }) =>
                           href?.startsWith("#vicky-source=") ? (
@@ -375,9 +378,9 @@ export function SavedChat({
           ))}
           {busy && (
             <Message from="assistant" className="max-w-full">
-              <MessageContent>
+              <MessageContent className="max-w-[65ch] text-[15px] leading-7">
                 {output ? (
-                  <MessageResponse isAnimating>{output}</MessageResponse>
+                  <MessageResponse isAnimating remarkPlugins={[sourceTags, chatHeadingParagraphs]} components={{a:({href,children})=>href?.startsWith('#vicky-source=')?<SourceChip tag={decodeURIComponent(href.slice(14))}/>:<a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs text-primary">{children}<ExternalLink className="size-3"/></a>}}>{output}</MessageResponse>
                 ) : (
                   <Shimmer>Vicky is thinking…</Shimmer>
                 )}

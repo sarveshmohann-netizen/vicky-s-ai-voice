@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { lovable } from '@/integrations/lovable';
 import { supabase } from '@/integrations/supabase/client';
 import { meetingSearchSchema } from '@/lib/vicky-inputs';
+import { CompanySwitcher } from './CompanySwitcher';
 
 const NAV = [
   { to: '/', label: 'Meeting prep' },
@@ -75,6 +76,7 @@ export function SessionGate({ children }: { children: (userId: string) => ReactN
       <span className="min-w-0 truncate">{session.user.email}</span>
       <Button variant="ghost" size="sm" onClick={async () => { queryClient.clear(); await supabase.auth.signOut(); }}><LogOut className="size-3.5" />Sign out</Button>
     </div>
+    <CompanySwitcher founderId={session.user.id} />
     {children(session.user.id)}
   </>;
 }

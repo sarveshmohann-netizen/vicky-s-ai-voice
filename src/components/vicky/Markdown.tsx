@@ -5,6 +5,12 @@ import { SourceChip } from './Sources';
 import { splitSourceText } from '@/lib/vicky-sources';
 
 type Node = { type: string; value?: string; children?: Node[]; url?: string };
+export function chatHeadingParagraphs() {
+  return (tree: Node) => {
+    const visit = (node: Node) => { if (node.type === 'heading') node.type = 'paragraph'; node.children?.forEach(visit); };
+    visit(tree);
+  };
+}
 export function sourceTags() {
   return (tree: Node) => {
     const visit = (node: Node) => {

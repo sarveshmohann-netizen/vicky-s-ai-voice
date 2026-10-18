@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Upload, ArrowRight, ArrowLeft, Download, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -34,14 +34,14 @@ export function CompanyDialog({ companyId, onSaved, onClose }: Props) {
   const [busy, setBusy] = useState(false);
   const [loaded, setLoaded] = useState(!companyId);
   // A keyed dialog is mounted once for each edit; no browser-only source CSV is returned.
-  useState(() => {
+  useEffect(() => {
     if (companyId) void getCompanyDetails({ data:{ id:companyId } }).then(data => {
       const next: Record<string,string> = {name:data.profile.name, currency:data.profile.currency};
       for (const [key,,,percent] of FIELDS) { const v = data.profile[key]; if (v !== undefined) next[key] = String(percent ? v * 100 : v); }
       for (const [key, label] of Object.entries(DECK_LABELS)) { const v = data.profile.deck?.[key as keyof NonNullable<CompanyProfile['deck']>]; if (v !== undefined) next['deck.'+key] = String(label.unit === 'pct' ? v*100 : v); }
       setValues(next); setParsed(data.parsed); setLoaded(true);
     }).catch(e => setError(e.message));
-  });
+  }, [companyId]);
   async function read(file?: File) {
     if (!file) return;
     setError('');
