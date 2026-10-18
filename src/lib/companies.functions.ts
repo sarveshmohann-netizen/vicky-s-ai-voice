@@ -22,14 +22,14 @@ export const getCompanyDetails = createServerFn({ method: 'POST' }).middleware([
 export const saveCompany = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).inputValidator(input => companySaveSchema.parse(input)).handler(async ({ data, context }) => {
   const parsed = parseFinancials(data.source_csv);
   if (!parsed.rows.length) throw new Error(parsed.warnings.at(-1) ?? 'No monthly revenue could be read from this file.');
-  const values = { founder_id: context.userId, name: data.profile.name, currency: data.profile.currency, profile: JSON.parse(JSON.stringify(data.profile)), parsed: JSON.parse(JSON.stringify(parsed)), source_csv: data.source_csv, updated_at: new Date().toISOString() };
+  const values = { founder_id: context.userId, name: data.profile.name, currency: data.profile.currency ?? 'USD', profile: JSON.parse(JSON.stringify(data.profile)), parsed: JSON.parse(JSON.stringify(parsed)), source_csv: data.source_csv, updated_at: new Date().toISOString() };
   const query = data.id ? context.supabase.from('companies').update(values).eq('id', data.id).eq('founder_id', context.userId) : context.supabase.from('companies').insert(values);
   const { data: row, error } = await query.select('id,name,currency').single();
   if (error || !row) throw new Error('Could not save your company.');
   return row;
 });
 export const updateCompanyDetails = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).inputValidator(input => companySaveSchema.omit({ source_csv: true }).extend({ id: z.string().uuid() }).parse(input)).handler(async ({ data, context }) => {
-  const { data: row, error } = await context.supabase.from('companies').update({ name: data.profile.name, currency: data.profile.currency, profile: JSON.parse(JSON.stringify(data.profile)), updated_at: new Date().toISOString() }).eq('id', data.id).eq('founder_id', context.userId).select('id,name,currency').single();
+  const { data: row, error } = await context.supabase.from('companies').update({ name: data.profile.name, currency: data.profile.currency ?? 'USD', profile: JSON.parse(JSON.stringify(data.profile)), updated_at: new Date().toISOString() }).eq('id', data.id).eq('founder_id', context.userId).select('id,name,currency').single();
   if (error || !row) throw new Error('Could not save company details.');
   return row;
 });

@@ -67,8 +67,7 @@ export const updateConversation = createServerFn({ method: "POST" })
     const { data: row, error } = await context.supabase
       .from("conversations")
       .update({
-        ...data.settings,
-        ...(data.settings ? { company_id: data.settings.company_id ?? null } : {}),
+        ...(data.settings ? { mode:data.settings.mode, persona:data.settings.persona, stage:data.settings.stage, company_id: data.settings.company_id ?? null } : {}),
         ...(data.title ? { title: data.title } : {}),
         updated_at: new Date().toISOString(),
       })

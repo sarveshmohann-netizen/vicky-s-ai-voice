@@ -36,7 +36,7 @@ export function CompanyDialog({ companyId, onSaved, onClose }: Props) {
   // A keyed dialog is mounted once for each edit; no browser-only source CSV is returned.
   useEffect(() => {
     if (companyId) void getCompanyDetails({ data:{ id:companyId } }).then(data => {
-      const next: Record<string,string> = {name:data.profile.name, currency:data.profile.currency};
+      const next: Record<string,string> = {name:data.profile.name, currency:data.profile.currency ?? 'USD'};
       for (const [key,,,percent] of FIELDS) { const v = data.profile[key]; if (v !== undefined) next[key] = String(percent ? v * 100 : v); }
       for (const [key, label] of Object.entries(DECK_LABELS)) { const v = data.profile.deck?.[key as keyof NonNullable<CompanyProfile['deck']>]; if (v !== undefined) next['deck.'+key] = String(label.unit === 'pct' ? v*100 : v); }
       setValues(next); setParsed(data.parsed); setLoaded(true);
