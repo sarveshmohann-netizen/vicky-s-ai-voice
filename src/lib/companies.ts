@@ -5,7 +5,7 @@ import type { KnownMetric } from './vicky/knowledge';
 const amount = z.number().finite().nonnegative().optional();
 const rate = z.number().finite().nonnegative().optional();
 export const companyProfileSchema = z.object({
-  name: z.string().trim().min(1).max(200), currency: z.string().trim().min(1).max(8).default('USD'),
+  name: z.string().trim().min(1).max(200), currency: z.string().trim().toUpperCase().refine(value => { try { new Intl.NumberFormat('en-US', { style:'currency', currency:value }); return /^[A-Z]{3}$/.test(value); } catch { return false; } }, 'Use a three-letter currency code.').default('USD'),
   cash: amount, raiseAmount: amount, planMonthlySpendAfterRaise: amount,
   customers: z.number().int().nonnegative().optional(), newCustomersL12M: z.number().int().nonnegative().optional(),
   logoChurnMonthly: rate, nrr: rate, grr: rate, largestCustomerShare: rate, planMonthlyGrowth: rate,

@@ -44,7 +44,7 @@ function MeetingPrep({founderId}:{founderId:string}) {
       if(choice.company_id) return {kind:'company',...await getCompanyDashboard({data:{founder_id:founderId,company_id:choice.company_id,persona:choice.persona,stage:choice.stage}})};
       const [analysis,brief] = await Promise.all([getTidewellAnalysis({data:{founder_id:founderId}}),getMeetingBrief({data:{founder_id:founderId,persona:choice.persona,stage:choice.stage}})]);
       return {kind:'sample',analysis,brief};
-    }, staleTime:0, refetchOnMount:'always',
+    }, staleTime:0, refetchOnMount:'always', placeholderData:previous=>previous,
   });
   const data = dashboard.data;
   const gaps = data?.kind==='company'?data.analysis.dataGaps:data?.analysis.dataGaps.items??[];
