@@ -5,7 +5,7 @@ import { SourceChip } from './Sources';
 import { splitSourceText } from '@/lib/vicky-sources';
 
 type Node = { type: string; value?: string; children?: Node[]; url?: string };
-function sourceTags() {
+export function sourceTags() {
   return (tree: Node) => {
     const visit = (node: Node) => {
       if (!node.children || ['link', 'code', 'inlineCode'].includes(node.type)) return;

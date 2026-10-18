@@ -22,7 +22,7 @@ export async function gradeForFounder(client: SupabaseClient<Database>, userId: 
   const analysis = toKnowledgeAnalysis(data.analysis);
   const factChecks = factCheckAnswer(input.answer, knownMetrics(data.analysis));
   const system = buildSystemPrompt({ mode: 'ask', analysis, history: data.history, lessons: data.lessons });
-  const prompt = gradingPrompt(question, input.answer, analysis);
+  const prompt = gradingPrompt(input.investorQuestion ? { ...question, question:input.investorQuestion } : question, input.answer, analysis);
   const ai = createVickyAI();
   const parsed = await gradeWithRetry(retry => ai.text(system, [{ role: 'user', content: prompt + '\nCODE FACT CHECKS: ' + JSON.stringify(factChecks) + (retry ? '\nThe last response could not be parsed. Return only the requested grade JSON, with every criterion present.' : '') }]), question.id, input.flagId);
   if (!parsed) return { error: 'Vicky could not produce a usable grade after two attempts. Nothing was saved.' };

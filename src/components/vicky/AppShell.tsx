@@ -47,7 +47,7 @@ export function Loading({ label = 'Loading…' }: { label?: string }) {
   return <p role="status" className="flex items-center gap-2 py-6 text-muted-foreground"><Loader2 className="size-4 animate-spin motion-reduce:animate-none" />{label}</p>;
 }
 
-function SessionGate({ children }: { children: (userId: string) => ReactNode }) {
+export function SessionGate({ children }: { children: (userId: string) => ReactNode }) {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [error, setError] = useState('');
   const queryClient = useQueryClient();
