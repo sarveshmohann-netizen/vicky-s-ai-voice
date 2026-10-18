@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +22,8 @@ export function useVickySession() {
 }
 export function useVickyDashboard(choice: z.infer<typeof meetingSearchSchema>) {
   const session = useVickySession();
-  const sample = useMemo(() => analyzeTidewell(), []);
+  // Keep the query's hook position stable during live preview updates.
+  const sample = analyzeTidewell();
   const fallback = {
     analysis: sample,
     brief: meetingBrief(choice.persona, choice.stage, [], sample),
