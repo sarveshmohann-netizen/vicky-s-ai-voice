@@ -20,3 +20,6 @@
 - Keep investor and stage preferences in validated route search parameters shared by meeting prep and practice; this makes demo links reproducible.
 - Render meeting charts and briefs from the read-only engine output, with shared source-chip parsing outside the engine; this prevents duplicated financial calculations and keeps citations consistent.
 - Combine coaching chat, question grading and pitch simulation in the Practice route; this keeps the demo in one navigation flow.
+- Keep saved chat identity in a dedicated Practice URL and enforce conversation ownership through RLS and authenticated server calls; this restores the correct history on reload.
+- Prepare edits and regeneration atomically in database functions, and save completed replies in the existing SSE server handler with a version guard; this prevents stale replies overwriting newer chat state.
+- Compose saved-chat UI from AI Elements while preserving Vicky's existing RPC and SSE transport; this retains the requested endpoint and citation behavior without changing engine logic.

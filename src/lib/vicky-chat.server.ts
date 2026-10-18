@@ -4,8 +4,9 @@ import { chatInput, assertFounderAccess } from './vicky-inputs';
 import { loadFounderData } from './vicky-data.server';
 import { buildSystemPrompt } from './vicky/knowledge';
 import { toKnowledgeAnalysis } from './vicky/tidewell/analysis';
-import { createVickyAI, safeAIError } from './vicky-ai.server';
+import { createVickyAI, safeAIError, VickyAIError } from './vicky-ai.server';
 import { withLovableAiGatewayRunIdHeader } from './ai/run-id.server';
+import { turnSchema, isGradeMessage } from './conversations';
 
 export async function handleVickyChat(request: Request) {
   const token = request.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
@@ -22,10 +23,25 @@ export async function handleVickyChat(request: Request) {
   if (parsed.data.founder_id !== userId) return Response.json({ error: 'You can only access your own practice records.' }, { status: 403 });
   try {
     const id = assertFounderAccess(userId, parsed.data.founder_id);
+    let input = parsed.data;
+    let version: string | undefined;
+    if (input.conversation_id) {
+      const last = input.messages.at(-1);
+      const { data: prepared, error: prepareError } = await client.rpc('vicky_prepare_turn', {
+        p_conversation: input.conversation_id, p_action: input.action ?? 'send',
+        ...(input.message_id ? { p_message: input.message_id } : {}),
+        ...(last ? { p_content: last.content } : {}),
+      });
+      if (prepareError) return Response.json({ error: 'Could not save this message. Reload the chat and try again.' }, { status: 409 });
+      const turn = turnSchema.parse(prepared);
+      version = turn.conversation.updated_at;
+      input = { ...input, mode:turn.conversation.mode, persona:turn.conversation.persona, stage:turn.conversation.stage,
+        messages:turn.messages.filter(m => !isGradeMessage(m)).slice(-100).map(({ role,content }) => ({ role,content })) };
+    }
     const { analysis, history, lessons } = await loadFounderData(client, id, true);
-    const system = buildSystemPrompt({ mode: parsed.data.mode, stage: parsed.data.stage, ...(parsed.data.persona ? { persona: parsed.data.persona } : {}), analysis: toKnowledgeAnalysis(analysis), history, lessons });
+    const system = buildSystemPrompt({ mode: input.mode, stage: input.stage, ...(input.persona ? { persona: input.persona } : {}), analysis: toKnowledgeAnalysis(analysis), history, lessons });
     const ai = createVickyAI();
-    const result = ai.stream(system, parsed.data.messages, request.signal);
+    const result = ai.stream(system, input.messages, request.signal);
     // Read the first event before sending headers, so upstream denials retain status.
     const iterator = result.fullStream[Symbol.asyncIterator]();
     let first = await iterator.next();
@@ -35,17 +51,24 @@ export async function handleVickyChat(request: Request) {
     const body = new ReadableStream<Uint8Array>({
       async start(controller) {
         let wroteText = false;
+        let completedText = '';
         const emit = (event: unknown) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
         try {
           let current = first;
           while (!current.done) {
             const part = current.value;
-            if (part.type === 'text-delta') { wroteText = true; emit({ type: 'text', text: part.text }); }
+            if (part.type === 'text-delta') { wroteText = true; completedText += part.text; emit({ type: 'text', text: part.text }); }
             if (part.type === 'error') throw part.error;
             current = await iterator.next();
           }
           if (!wroteText) emit({ type: 'error', status: 422, error: 'Lovable AI returned no usable response.' });
-          else emit({ type: 'done' });
+          else {
+            if (input.conversation_id && version && !request.signal.aborted) {
+              const { error: saveError } = await client.rpc('vicky_complete_turn', { p_conversation:input.conversation_id, p_version:version, p_content:completedText });
+              if (saveError) throw new VickyAIError(409, 'The reply could not be saved. Reload the chat before continuing.');
+            }
+            emit({ type: 'done' });
+          }
         } catch (error) { const safe = safeAIError(error); emit({ type: 'error', status: safe.status, error: safe.message }); }
         finally { controller.close(); }
       },

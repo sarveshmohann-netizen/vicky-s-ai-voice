@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LessonsRouteImport } from './routes/lessons'
 import { Route as PracticeRouteImport } from './routes/practice'
+import { Route as PracticeConversationIdRouteImport } from './routes/practice_.$conversationId'
 import { Route as ApiPublicVickyChatRouteImport } from './routes/api/public/vicky-chat'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const PracticeRoute = PracticeRouteImport.update({
   path: '/practice',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PracticeConversationIdRoute = PracticeConversationIdRouteImport.update({
+  id: '/practice_/$conversationId',
+  path: '/practice/$conversationId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicVickyChatRoute = ApiPublicVickyChatRouteImport.update({
   id: '/api/public/vicky-chat',
   path: '/api/public/vicky-chat',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/lessons': typeof LessonsRoute
   '/practice': typeof PracticeRoute
+  '/practice/$conversationId': typeof PracticeConversationIdRoute
   '/api/public/vicky-chat': typeof ApiPublicVickyChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/lessons': typeof LessonsRoute
   '/practice': typeof PracticeRoute
+  '/practice/$conversationId': typeof PracticeConversationIdRoute
   '/api/public/vicky-chat': typeof ApiPublicVickyChatRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,38 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/lessons': typeof LessonsRoute
   '/practice': typeof PracticeRoute
+  '/practice_/$conversationId': typeof PracticeConversationIdRoute
   '/api/public/vicky-chat': typeof ApiPublicVickyChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/lessons' | '/practice' | '/api/public/vicky-chat'
+  fullPaths:
+    | '/'
+    | '/lessons'
+    | '/practice'
+    | '/practice/$conversationId'
+    | '/api/public/vicky-chat'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/lessons' | '/practice' | '/api/public/vicky-chat'
-  id: '__root__' | '/' | '/lessons' | '/practice' | '/api/public/vicky-chat'
+  to:
+    | '/'
+    | '/lessons'
+    | '/practice'
+    | '/practice/$conversationId'
+    | '/api/public/vicky-chat'
+  id:
+    | '__root__'
+    | '/'
+    | '/lessons'
+    | '/practice'
+    | '/practice_/$conversationId'
+    | '/api/public/vicky-chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LessonsRoute: typeof LessonsRoute
   PracticeRoute: typeof PracticeRoute
+  PracticeConversationIdRoute: typeof PracticeConversationIdRoute
   ApiPublicVickyChatRoute: typeof ApiPublicVickyChatRoute
 }
 
@@ -92,6 +118,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PracticeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/practice_/$conversationId': {
+      id: '/practice_/$conversationId'
+      path: '/practice/$conversationId'
+      fullPath: '/practice/$conversationId'
+      preLoaderRoute: typeof PracticeConversationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/vicky-chat': {
       id: '/api/public/vicky-chat'
       path: '/api/public/vicky-chat'
@@ -106,6 +139,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LessonsRoute: LessonsRoute,
   PracticeRoute: PracticeRoute,
+  PracticeConversationIdRoute: PracticeConversationIdRoute,
   ApiPublicVickyChatRoute: ApiPublicVickyChatRoute,
 }
 export const routeTree = rootRouteImport

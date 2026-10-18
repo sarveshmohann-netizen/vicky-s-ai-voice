@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          created_at: string
+          founder_id: string
+          id: string
+          mode: string
+          persona: string
+          stage: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          founder_id?: string
+          id?: string
+          mode?: string
+          persona?: string
+          stage?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          founder_id?: string
+          id?: string
+          mode?: string
+          persona?: string
+          stage?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lessons: {
         Row: {
           created_at: string
@@ -34,6 +67,38 @@ export type Database = {
           topics?: string[]
         }
         Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       practice_records: {
         Row: {
@@ -99,6 +164,31 @@ export type Database = {
         Returns: boolean
       }
       valid_practice_grade: { Args: { value: Json }; Returns: boolean }
+      vicky_complete_turn: {
+        Args: { p_content: string; p_conversation: string; p_version: string }
+        Returns: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      vicky_prepare_turn: {
+        Args: {
+          p_action: string
+          p_content?: string
+          p_conversation: string
+          p_message?: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "user"

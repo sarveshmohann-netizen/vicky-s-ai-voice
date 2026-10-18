@@ -9,10 +9,11 @@ export const optionalFounderInput = z.object({ founder_id: z.string().uuid().opt
 export const questionsInput = founderInput.extend({ persona: personaSchema.optional(), stage: stageSchema.default('seed') });
 export const meetingInput = founderInput.extend({ persona: personaSchema, stage: stageSchema });
 export const chatInput = founderInput.extend({
+  conversation_id: z.string().uuid().optional(), action: z.enum(['send','edit','regenerate']).optional(), message_id: z.string().uuid().optional(),
   mode: z.enum(['ask', 'simulate']), persona: personaSchema.optional(), stage: stageSchema.default('seed'),
   messages: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().min(1).max(20000) })).min(1).max(100),
 });
-export const gradeInput = founderInput.extend({ questionId: z.string().min(1), flagId: z.string().min(1).optional(), answer: z.string().trim().min(1).max(20000) });
+export const gradeInput = founderInput.extend({ questionId: z.string().min(1), flagId: z.string().min(1).optional(), answer: z.string().trim().min(1).max(20000), conversation_id: z.string().uuid().optional(), investorQuestion: z.string().min(1).max(20000).optional() });
 export type ChatInput = z.infer<typeof chatInput>;
 export type GradeInput = z.infer<typeof gradeInput>;
 export const isTopic = (value: string): value is Topic => QUESTIONS.some(q => q.topics.some(t => t === value));
