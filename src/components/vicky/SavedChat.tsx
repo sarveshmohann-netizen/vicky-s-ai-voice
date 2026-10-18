@@ -7,7 +7,10 @@ import {
   RotateCcw,
   ArrowUp,
   ClipboardCheck,
-  ExternalLink,
+  Mic,
+  Info,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 import {
   Conversation as Transcript,
@@ -17,7 +20,6 @@ import {
 import {
   Message,
   MessageContent,
-  MessageResponse,
   MessageActions,
   MessageAction,
 } from "@/components/ai-elements/message";
@@ -28,13 +30,19 @@ import {
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
+import { VickyAvatar } from "./VickyAvatar";
+import { ReplyContent } from "./ReplyContent";
+import { useVickyVoice } from "@/hooks/use-vicky-voice";
+import { chatSuggestions } from "@/lib/vicky/coach";
+import { CLARIFICATION } from "@/lib/vicky-dashboard";
+import type { useVickyDashboard } from "@/hooks/use-vicky-dashboard";
+import type { practiceSearchSchema } from "@/lib/conversations";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { SourceChip } from "./Sources";
-import { sourceTags, chatHeadingParagraphs } from "./Markdown";
+
 import { startVickyChat } from "@/lib/vicky-chat";
 import { vickyGrade } from "@/lib/vicky.functions";
-import { loadConversation } from "@/lib/conversations.functions";
+import { saveFeedback, loadConversation } from "@/lib/conversations.functions";
 import {
   GRADE_PREFIX,
   isGradeMessage,
@@ -79,7 +87,17 @@ export function SavedChat({
   initialMessages,
   launch,
   onBusy,
+  voice = false,
+  onSpeaking,
+  dashboard,
+  coach,
+  choice,
 }: {
+  voice?: boolean;
+  onSpeaking: (value: boolean) => void;
+  dashboard: ReturnType<typeof useVickyDashboard>["data"];
+  coach: ReturnType<typeof useVickyDashboard>["coach"];
+  choice: z.infer<typeof practiceSearchSchema>;
   conversation: Conversation;
   initialMessages: SavedMessage[];
   launch?: string | undefined;
@@ -98,6 +116,14 @@ export function SavedChat({
   const launched = useRef(false);
   const input = useRef<HTMLTextAreaElement>(null);
   const cache = useQueryClient();
+  const speech = useVickyVoice({ onDraft: setDraft, onSend: (text) => void run("send", text) });
+  useEffect(() => {
+    onSpeaking(speech.speaking);
+    return () => onSpeaking(false);
+  }, [speech.speaking, onSpeaking]);
+  useEffect(() => {
+    if (!voice) speech.stop();
+  }, [voice]);
   useEffect(() => {
     input.current?.focus();
     return () => {
@@ -111,8 +137,14 @@ export function SavedChat({
     cache.setQueryData(["conversation", conversation.id], data);
     await cache.invalidateQueries({ queryKey: ["conversations"] });
   }
-  async function run(action: "send" | "edit" | "regenerate", content: string, messageId?: string) {
+  async function run(
+    action: "send" | "edit" | "regenerate",
+    content: string,
+    messageId?: string,
+    clarification = false,
+  ) {
     if (lock.current || !content.trim()) return;
+    speech.stop();
     lock.current = true;
     setBusy(true);
     onBusy(true);
@@ -130,6 +162,7 @@ export function SavedChat({
           role: "user",
           content: content.trim(),
           created_at: new Date().toISOString(),
+          hidden: clarification,
         },
       ];
     if (action === "edit") {
@@ -149,7 +182,6 @@ export function SavedChat({
     try {
       const requestMessages = next
         .filter((m) => !isGradeMessage(m))
-        .slice(-100)
         .map(({ role, content }) => ({ role, content }));
       const res = await startVickyChat(
         {
@@ -157,6 +189,7 @@ export function SavedChat({
           conversation_id: conversation.id,
           company_id: conversation.company_id,
           action,
+          clarification,
           message_id: messageId,
           ...{ mode: conversation.mode, persona: conversation.persona, stage: conversation.stage },
           messages: requestMessages,
@@ -188,6 +221,7 @@ export function SavedChat({
         }
       }
       if (!doneEvent) throw new Error("The reply was interrupted and was not saved.");
+      if (voice) speech.speak(text);
     } catch (e) {
       if (!ctrl.signal.aborted) setError(e instanceof Error ? e.message : "Vicky could not reply.");
     } finally {
@@ -239,148 +273,172 @@ export function SavedChat({
       input.current?.focus();
     }
   }
+  async function feedback(message: SavedMessage, value: "up" | "down") {
+    try {
+      await saveFeedback({ data: { id: message.id, feedback: value } });
+      setMessages((old) => old.map((m) => (m.id === message.id ? { ...m, feedback: value } : m)));
+      if (value === "down") await run("send", CLARIFICATION, undefined, true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save feedback.");
+    }
+  }
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <Transcript className="min-h-0 flex-1">
         <ConversationContent className="mx-auto w-full max-w-3xl gap-8 px-5 py-8 md:px-8">
           {!messages.length && !busy && (
-            <div className="py-16 text-center">
-              <img src="/brand/june-analytics-mark.png" alt="" className="mx-auto mb-5 size-12" />
-              <h1 className="text-3xl">
-                {conversation.mode === "ask" ? "Ask Vicky" : "Mock meeting"}
-              </h1>
-              {conversation.mode === "simulate" && (
-                <Button
-                  className="mt-6"
-                  onClick={() =>
-                    void run(
-                      "send",
-                      "I'm ready for our mock meeting. Please ask five questions one at a time, then give me the scorecard.",
-                    )
-                  }
-                >
-                  Start the meeting
-                </Button>
-              )}
+            <div className="flex flex-col items-center gap-5 py-16">
+              <VickyAvatar />
+              <div className="flex flex-col gap-2">
+                {chatSuggestions(coach?.plan ?? []).map((prompt) => (
+                  <Button
+                    key={prompt}
+                    variant="outline"
+                    className="h-auto whitespace-normal py-3 text-xs"
+                    onClick={() => void run("send", prompt)}
+                  >
+                    {prompt}
+                  </Button>
+                ))}
+              </div>
             </div>
           )}
-          {messages.map((m) => (
-            <Message
-              key={m.id}
-              from={m.role}
-              className={m.role === "user" ? "max-w-[90%]" : "max-w-full"}
-            >
-              {edit?.id === m.id ? (
-                <div className="w-full space-y-2">
-                  <Textarea
-                    autoFocus
-                    aria-label="Edit message"
-                    value={edit.content}
-                    maxLength={20000}
-                    onChange={(e) => setEdit({ ...edit, content: e.target.value })}
-                  />
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setEdit(null);
-                        input.current?.focus();
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      size="sm"
-                      disabled={!edit.content.trim() || busy}
-                      onClick={() => void run("edit", edit.content, m.id)}
-                    >
-                      Save & regenerate
-                    </Button>
+          {messages.map((m) =>
+            m.hidden ? (
+              <p key={m.id} className="text-xs text-muted-foreground">
+                Vicky will ask what you need
+              </p>
+            ) : (
+              <Message
+                key={m.id}
+                from={m.role}
+                className={m.role === "user" ? "max-w-[90%]" : "max-w-full"}
+              >
+                {m.role === "assistant" && (
+                  <VickyAvatar small active={speech.speaking && m.id === latest?.id} />
+                )}
+                {edit?.id === m.id ? (
+                  <div className="w-full space-y-2">
+                    <Textarea
+                      autoFocus
+                      aria-label="Edit message"
+                      value={edit.content}
+                      maxLength={20000}
+                      onChange={(e) => setEdit({ ...edit, content: e.target.value })}
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEdit(null);
+                          input.current?.focus();
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        disabled={!edit.content.trim() || busy}
+                        onClick={() => void run("edit", edit.content, m.id)}
+                      >
+                        Save & regenerate
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <MessageContent
-                  className={
-                    m.role === "user"
-                      ? "group-[.is-user]:bg-primary group-[.is-user]:text-primary-foreground"
-                      : "w-full max-w-[65ch] overflow-visible text-[15px] leading-7"
-                  }
-                >
-                  {isGradeMessage(m) ? (
-                    <GradeCard content={m.content} />
-                  ) : m.role === "user" ? (
-                    <p className="whitespace-pre-wrap text-[15px]">{m.content}</p>
-                  ) : (
-                    <MessageResponse
-                      remarkPlugins={[sourceTags, chatHeadingParagraphs]}
-                      components={{
-                        a: ({ href, children }) =>
-                          href?.startsWith("#vicky-source=") ? (
-                            <SourceChip tag={decodeURIComponent(href.slice(14))} />
-                          ) : (
-                            <a
-                              href={href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs text-primary"
-                            >
-                              {children}
-                              <ExternalLink className="size-3" />
-                            </a>
-                          ),
-                      }}
-                    >
-                      {m.content}
-                    </MessageResponse>
-                  )}
-                </MessageContent>
-              )}
-              {!isGradeMessage(m) && (
-                <MessageActions className={m.role === "user" ? "justify-end" : ""}>
-                  {m.role === "user" ? (
-                    <MessageAction
-                      tooltip="Edit"
-                      disabled={busy || grading || m.id === "pending"}
-                      onClick={() => setEdit({ id: m.id, content: m.content })}
-                    >
-                      <Pencil />
-                    </MessageAction>
-                  ) : (
-                    m.id === latest?.id && (
+                ) : (
+                  <MessageContent
+                    className={
+                      m.role === "user"
+                        ? "group-[.is-user]:bg-primary group-[.is-user]:text-primary-foreground"
+                        : "w-full max-w-[65ch] overflow-visible text-[15px] leading-7"
+                    }
+                  >
+                    {isGradeMessage(m) ? (
+                      <GradeCard content={m.content} />
+                    ) : m.role === "user" ? (
+                      <p className="whitespace-pre-wrap text-[15px]">{m.content}</p>
+                    ) : (
+                      <ReplyContent
+                        text={m.content}
+                        charts={dashboard?.analysis.charts ?? {}}
+                        base={coach?.scenarioBase ?? null}
+                        metrics={dashboard?.analysis.metrics ?? {}}
+                        choice={choice}
+                      />
+                    )}
+                  </MessageContent>
+                )}
+                {!isGradeMessage(m) && (
+                  <MessageActions className={m.role === "user" ? "justify-end" : ""}>
+                    {m.role === "user" ? (
+                      <MessageAction
+                        tooltip="Edit"
+                        disabled={busy || grading || m.id === "pending"}
+                        onClick={() => setEdit({ id: m.id, content: m.content })}
+                      >
+                        <Pencil />
+                      </MessageAction>
+                    ) : (
                       <>
                         <MessageAction
-                          tooltip="Regenerate"
-                          disabled={busy || grading}
-                          onClick={() => void run("regenerate", m.content, m.id)}
+                          tooltip="Helpful"
+                          disabled={busy}
+                          onClick={() => void feedback(m, "up")}
+                          className={m.feedback === "up" ? "text-primary" : ""}
                         >
-                          <RotateCcw />
+                          <ThumbsUp />
                         </MessageAction>
                         <MessageAction
-                          tooltip={copied ? "Copied" : "Copy"}
-                          onClick={async () => {
-                            try {
-                              await navigator.clipboard.writeText(m.content);
-                              setCopied(true);
-                            } catch {
-                              setError("Copy failed. Please try again.");
-                            }
-                          }}
+                          tooltip="Not helpful"
+                          disabled={busy}
+                          onClick={() => void feedback(m, "down")}
+                          className={m.feedback === "down" ? "text-primary" : ""}
                         >
-                          {copied ? <Check /> : <Copy />}
+                          <ThumbsDown />
                         </MessageAction>
+                        {m.id === latest?.id && (
+                          <>
+                            <MessageAction
+                              tooltip="Regenerate"
+                              disabled={busy || grading}
+                              onClick={() => void run("regenerate", m.content, m.id)}
+                            >
+                              <RotateCcw />
+                            </MessageAction>
+                            <MessageAction
+                              tooltip={copied ? "Copied" : "Copy"}
+                              onClick={() => {
+                                void navigator.clipboard
+                                  .writeText(m.content)
+                                  .then(() => setCopied(true))
+                                  .catch(() => setError("Copy failed."));
+                              }}
+                            >
+                              {copied ? <Check /> : <Copy />}
+                            </MessageAction>
+                          </>
+                        )}
                       </>
-                    )
-                  )}
-                </MessageActions>
-              )}
-            </Message>
-          ))}
+                    )}
+                  </MessageActions>
+                )}
+              </Message>
+            ),
+          )}
           {busy && (
             <Message from="assistant" className="max-w-full">
               <MessageContent className="max-w-[65ch] text-[15px] leading-7">
+                <VickyAvatar small active />
                 {output ? (
-                  <MessageResponse isAnimating remarkPlugins={[sourceTags, chatHeadingParagraphs]} components={{a:({href,children})=>href?.startsWith('#vicky-source=')?<SourceChip tag={decodeURIComponent(href.slice(14))}/>:<a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs text-primary">{children}<ExternalLink className="size-3"/></a>}}>{output}</MessageResponse>
+                  <ReplyContent
+                    text={output}
+                    charts={dashboard?.analysis.charts ?? {}}
+                    base={coach?.scenarioBase ?? null}
+                    metrics={dashboard?.analysis.metrics ?? {}}
+                    choice={choice}
+                    streaming
+                  />
                 ) : (
                   <Shimmer>Vicky is thinking…</Shimmer>
                 )}
@@ -419,11 +477,37 @@ export function SavedChat({
             maxLength={20000}
             onChange={(e) => setDraft(e.target.value)}
           />
-          <PromptInputFooter className="justify-end">
+          <PromptInputFooter className="justify-between">
+            {speech.supported ? (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={speech.listening ? "Stop dictation" : "Dictate message"}
+                disabled={busy}
+                onClick={speech.dictate}
+              >
+                <Mic className={speech.listening ? "text-destructive" : ""} />
+              </Button>
+            ) : (
+              <span
+                title="Voice input works in Chrome, Edge and Safari"
+                className="text-[10px] text-muted-foreground"
+              >
+                <Info className="size-3" />
+              </span>
+            )}
+            {speech.speaking && (
+              <Button variant="ghost" size="sm" onClick={speech.stop}>
+                Stop
+              </Button>
+            )}
             <PromptInputSubmit
               status={busy ? (output ? "streaming" : "submitted") : "ready"}
               disabled={!busy && (!draft.trim() || grading)}
-              onStop={() => abort.current?.abort()}
+              onStop={() => {
+                speech.stop();
+                abort.current?.abort();
+              }}
             >
               {!busy && <ArrowUp />}
             </PromptInputSubmit>

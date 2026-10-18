@@ -120,6 +120,8 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string
+          feedback: string | null
+          hidden: boolean
           id: string
           role: string
         }
@@ -127,6 +129,8 @@ export type Database = {
           content: string
           conversation_id: string
           created_at?: string
+          feedback?: string | null
+          hidden?: boolean
           id?: string
           role: string
         }
@@ -134,6 +138,8 @@ export type Database = {
           content?: string
           conversation_id?: string
           created_at?: string
+          feedback?: string | null
+          hidden?: boolean
           id?: string
           role?: string
         }
@@ -228,6 +234,8 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string
+          feedback: string | null
+          hidden: boolean
           id: string
           role: string
         }
@@ -238,6 +246,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      vicky_hide_clarification: {
+        Args: { p_conversation: string }
+        Returns: undefined
+      }
       vicky_prepare_turn: {
         Args: {
           p_action: string
@@ -246,6 +258,10 @@ export type Database = {
           p_message?: string
         }
         Returns: Json
+      }
+      vicky_set_feedback: {
+        Args: { p_feedback: string; p_message: string }
+        Returns: undefined
       }
     }
     Enums: {

@@ -26,7 +26,7 @@ export const Route = createFileRoute('/lessons')({
 function LessonsPage() {
   return <div className="min-h-screen bg-background text-foreground">
     <AppHeader />
-    <div className="vicky-intro"><p className="mb-4 text-xs font-semibold uppercase text-primary">Vicky’s knowledge</p><h1 className="text-4xl md:text-5xl">Lessons</h1></div>
+    <h1 className="mx-auto max-w-5xl px-6 pt-6 text-xl font-semibold">Lessons</h1>
     <main className="mx-auto max-w-5xl px-6 py-12">
       <ClientOnly fallback={<Loading />}><Suspense fallback={<Loading />}><LessonsWorkspace /></Suspense></ClientOnly>
     </main>

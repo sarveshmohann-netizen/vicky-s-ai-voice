@@ -17,7 +17,7 @@
 - Keep Vicky RPC exports in a client-safe functions module and AI/storage helpers server-only, so secrets and prompts never ship to browsers.
 - Stream Vicky chat through a bearer-verified HTTP route reached from its RPC entry point; RPC returns only serializable data, not a Response or stream.
 - Persist optional assumption flag IDs and code-produced fact checks inside practice grade JSON alongside rubric scores, so readiness can reconstruct practice without extra tables or invented evidence.
-- Keep investor and stage preferences in validated route search parameters shared by meeting prep and practice; this makes demo links reproducible.
+- Keep investor and stage preferences in validated route search parameters shared by Dashboard, Vicky and Learn; this makes demo links reproducible.
 - Render meeting charts and briefs from the read-only engine output, with shared source-chip parsing outside the engine; this prevents duplicated financial calculations and keeps citations consistent.
 - Combine coaching chat, question grading and pitch simulation in the Practice route; this keeps the demo in one navigation flow.
 - Keep saved chat identity in a dedicated Practice URL and enforce conversation ownership through RLS and authenticated server calls; this restores the correct history on reload.
@@ -25,3 +25,8 @@
 - Compose saved-chat UI from AI Elements while preserving Vicky's existing RPC and SSE transport; this retains the requested endpoint and citation behavior without changing engine logic.
 - Import the read-only company parser, analysis, brief and lens engine through company adapters; keep uploaded parses canonical by reparsing CSV on save and never return source CSV in reads.
 - Scope conversations and practice records by an optional company association with owner validation; null associations retain sample behavior and prevent uploaded-company coaching contaminating sample readiness.
+
+- Build coaching context and reply visuals through the shared dashboard adapter importing coach/glossary engine functions; this keeps server and browser what-if bases identical.
+- Keep /practice URLs for Vicky conversations while using /learn for glossary content; this preserves saved-chat links.
+- Persist feedback and hidden clarification flags through owner-verified database functions; this prevents cross-founder message changes.
+- Use browser speech recognition and synthesis only after hydration; this keeps voice optional without external services.

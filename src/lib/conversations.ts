@@ -6,6 +6,7 @@ import type { Tables } from "@/integrations/supabase/types";
 export const modeSchema = z.enum(["ask", "simulate"]);
 export const practiceSearchSchema = meetingSearchSchema.extend({
   question: z.string().optional(),
+  prompt: z.string().max(20000).optional(),
   mode: z.enum(["question", "ask", "simulate"]).catch("ask"),
 });
 export const settingsSchema = z.object({
@@ -29,6 +30,8 @@ export const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
   content: z.string(),
   created_at: z.string(),
+  feedback: z.enum(["up", "down"]).nullable().optional(),
+  hidden: z.boolean().optional(),
 });
 export const turnSchema = z.object({
   conversation: conversationSchema,

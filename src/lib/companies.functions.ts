@@ -91,5 +91,5 @@ export const getCompanyDashboard = createServerFn({ method: "POST" })
       id,
       data.company_id,
     );
-    return { analysis, brief: companyBrief(analysis, profile, data.persona, data.stage, history) };
+    return { analysis, profile, brief: companyBrief(analysis, profile, data.persona, data.stage, history) };
   });

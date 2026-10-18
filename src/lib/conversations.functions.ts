@@ -67,7 +67,14 @@ export const updateConversation = createServerFn({ method: "POST" })
     const { data: row, error } = await context.supabase
       .from("conversations")
       .update({
-        ...(data.settings ? { mode:data.settings.mode, persona:data.settings.persona, stage:data.settings.stage, company_id: data.settings.company_id ?? null } : {}),
+        ...(data.settings
+          ? {
+              mode: data.settings.mode,
+              persona: data.settings.persona,
+              stage: data.settings.stage,
+              company_id: data.settings.company_id ?? null,
+            }
+          : {}),
         ...(data.title ? { title: data.title } : {}),
         updated_at: new Date().toISOString(),
       })
@@ -90,4 +97,18 @@ export const deleteConversation = createServerFn({ method: "POST" })
       .select("id");
     if (error || !rows?.length) throw new Error("Could not delete this chat.");
     return { deleted: true };
+  });
+
+export const saveFeedback = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ id: z.string().uuid(), feedback: z.enum(["up", "down"]) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const result = await context.supabase.rpc("vicky_set_feedback", {
+      p_message: data.id,
+      p_feedback: data.feedback,
+    });
+    if (result.error) throw new Error("Could not save feedback.");
+    return { saved: true };
   });
