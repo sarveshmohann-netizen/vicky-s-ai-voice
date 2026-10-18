@@ -27,8 +27,8 @@ function Simulate({ founderId }: { founderId: string }) {
       className="investor-card group h-auto items-stretch justify-start whitespace-normal rounded-lg border-border p-6 text-left hover:border-primary hover:bg-secondary hover:text-foreground">
       <span className="flex w-full flex-col"><span className="mb-5 flex items-center justify-between text-primary"><BriefcaseBusiness className="size-6" /><ArrowUpRight className="size-5 transition-transform group-hover:translate-x-1 motion-reduce:transform-none" /></span>
       <span className="text-lg font-bold">{p.name}</span>
-      <p className="mt-1 font-mono text-sm text-accent">{p.cheque}</p>
-      <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Says no when</p>
+      <span className="mt-1 font-mono text-sm text-accent">{p.cheque}</span>
+      <span className="mt-4 text-xs font-semibold uppercase text-muted-foreground">Says no when</span>
       <span className="mt-1 text-sm font-normal leading-relaxed">{p.saysNoWhen}</span></span>
     </Button>)}
   </div>;

@@ -1,8 +1,9 @@
 import { Suspense, useState, type FormEvent } from 'react';
-import { ClientOnly, createFileRoute, Link } from '@tanstack/react-router';
+import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { BookOpen, Plus, Trash2, LogOut, LockKeyhole, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AppHeader } from '@/components/vicky/AppShell';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { lovable } from '@/integrations/lovable';
@@ -24,16 +25,9 @@ export const Route = createFileRoute('/lessons')({
 
 function LessonsPage() {
   return <div className="min-h-screen bg-background text-foreground">
-    <header className="border-b border-border bg-card"><div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-3">
-      <Link to="/" className="flex items-center gap-3"><img src="/brand/june-analytics-logo.png" alt="June Analytics" className="h-9 w-auto" /><span className="border-l border-border pl-3 text-sm font-semibold">Vicky</span></Link>
-      <nav aria-label="Main" className="flex flex-1 gap-1 overflow-x-auto">
-        {([['/', 'Analyze the Numbers'], ['/ask', 'Ask Vicky'], ['/prepare', 'Prepare the Founder'], ['/simulate', 'Simulate the Pitch']] as const).map(([to, label]) =>
-          <Link key={to} to={to} className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">{label}</Link>)}
-      </nav>
-      <span className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-widest text-muted-foreground"><BookOpen className="size-4" aria-hidden="true" />Lessons</span>
-    </div></header>
+    <AppHeader />
+    <div className="vicky-intro"><p className="mb-4 text-xs font-semibold uppercase text-primary">Vicky’s knowledge</p><h1 className="text-4xl md:text-5xl">Lessons</h1></div>
     <main className="mx-auto max-w-5xl px-6 py-12">
-      <div className="mb-10 border-b border-border pb-8"><p className="mb-3 text-xs font-semibold uppercase tracking-widest text-primary">Vicky’s knowledge</p><h1 className="text-4xl font-semibold">Lessons</h1></div>
       <ClientOnly fallback={<Loading />}><Suspense fallback={<Loading />}><LessonsWorkspace /></Suspense></ClientOnly>
     </main>
   </div>;
