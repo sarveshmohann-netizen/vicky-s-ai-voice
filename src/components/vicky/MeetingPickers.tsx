@@ -52,7 +52,7 @@ export function MeetingPickers({
           onValueChange={(value) => onChange({ persona, stage: stageSchema.parse(value) })}
         >
           <SelectTrigger aria-labelledby="stage-label" className="bg-card">
-            <SelectValue />
+            <SelectValue>{STAGES[stage].label}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {Object.values(STAGES).map((s) => (

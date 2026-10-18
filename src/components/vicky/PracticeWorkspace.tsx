@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { ClientOnly, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Menu, Plus, MoreHorizontal, Pencil, Trash2, MessageSquare } from "lucide-react";
+import { Menu, Plus, MoreHorizontal, Pencil, Trash2, MessageSquare, Mic } from "lucide-react";
 import { AppHeader, SessionGate, Loading } from "./AppShell";
 import { SavedChat } from "./SavedChat";
 import { ContextBar } from "./ContextBar";
 import { VickyAvatar } from "./VickyAvatar";
 import { useVickyDashboard } from "@/hooks/use-vicky-dashboard";
+import { useVickyVoice } from "@/hooks/use-vicky-voice";
 import { chatSuggestions } from "@/lib/vicky/coach";
 import {
   PromptInput,
@@ -78,6 +79,7 @@ function Workspace({
   const [voice, setVoice] = useState(false);
   const [draft, setDraft] = useState("");
   const navigate = useNavigate();
+  const speech = useVickyVoice({ onDraft: setDraft, onSend: (text) => void newChat(text) });
   const chats = useQuery({
     queryKey: ["conversations", founderId],
     queryFn: () => listConversations(),
@@ -143,7 +145,7 @@ function Workspace({
           : undefined);
       if (prompt) void newChat(prompt, search.mode === "simulate" ? "simulate" : "ask");
     }
-  }, [id, search.question, search.prompt, dashboard.data, newChat]);
+  }, [id, search.question, search.prompt, search.mode, dashboard.data, newChat]);
   async function change(next: Settings) {
     setError("");
     try {
@@ -423,7 +425,19 @@ function Workspace({
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                 />
-                <PromptInputFooter className="justify-end">
+                <PromptInputFooter className="justify-between">
+                  {speech.supported ? (
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      aria-label={speech.listening ? "Stop dictation" : "Dictate message"}
+                      onClick={speech.dictate}
+                    >
+                      <Mic />
+                    </Button>
+                  ) : (
+                    <span title="Voice input works in Chrome, Edge and Safari" />
+                  )}
                   <PromptInputSubmit
                     disabled={!draft.trim() || pending}
                     status={pending ? "submitted" : "ready"}
@@ -435,7 +449,10 @@ function Workspace({
         )}
       </main>
       <Sheet open={questionsOpen} onOpenChange={setQuestionsOpen}>
-        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+        <SheetContent
+          side="right"
+          className="w-full max-w-full overflow-y-auto sm:max-w-md [&_h3]:break-words"
+        >
           <SheetTitle>Likely questions</SheetTitle>
           <div className="mt-6 divide-y divide-border">
             {dashboard.data?.brief.questions.map((q, i) => (

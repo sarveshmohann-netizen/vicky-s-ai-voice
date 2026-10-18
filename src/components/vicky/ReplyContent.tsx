@@ -20,32 +20,33 @@ import { EngineChart } from "./EngineChart";
 import type { meetingSearchSchema } from "@/lib/vicky-inputs";
 import type { z } from "zod";
 type Choice = z.infer<typeof meetingSearchSchema>;
-export function glossaryLinks() {
-  return (tree: { type: string; value?: string; children?: unknown[] }) => {
+type MarkdownNode = { type: string; value?: string; url?: string; children?: MarkdownNode[] };
+function glossaryLinks() {
+  return (tree: MarkdownNode) => {
     const seen = new Set<string>();
-    const visit = (node: any) => {
+    const visit = (node: MarkdownNode) => {
       if (!node.children || ["link", "code", "inlineCode"].includes(node.type)) return;
-      node.children = node.children.flatMap((child: any) => {
+      node.children = node.children.flatMap((child: MarkdownNode) => {
         if (child.type !== "text" || !child.value) {
           visit(child);
           return [child];
         }
-        let parts: any[] = [child];
+        let parts: MarkdownNode[] = [child];
         for (const matcher of glossaryMatchers()) {
           if (seen.has(matcher.id)) continue;
           parts = parts.flatMap((p) => {
             if (p.type !== "text") return [p];
-            const m = matcher.pattern.exec(p.value);
+            const m = matcher.pattern.exec(p.value ?? "");
             if (!m) return [p];
             seen.add(matcher.id);
             return [
-              { type: "text", value: p.value.slice(0, m.index) },
+              { type: "text", value: (p.value ?? "").slice(0, m.index) },
               {
                 type: "link",
                 url: "#term=" + matcher.id,
                 children: [{ type: "text", value: m[0] }],
               },
-              { type: "text", value: p.value.slice(m.index + m[0].length) },
+              { type: "text", value: (p.value ?? "").slice(m.index + m[0].length) },
             ];
           });
         }

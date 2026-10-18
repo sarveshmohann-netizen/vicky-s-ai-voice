@@ -8,7 +8,7 @@ export function VickyAvatar({
   return (
     <span
       className={
-        "vicky-avatar relative inline-flex shrink-0 flex-col items-center " +
+        "vicky-avatar relative self-start inline-flex shrink-0 flex-col items-center " +
         (active ? "is-speaking" : "")
       }
     >
