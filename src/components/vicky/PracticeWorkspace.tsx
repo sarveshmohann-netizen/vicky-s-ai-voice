@@ -52,8 +52,12 @@ export function PracticePage({
 }) {
   return (
     <div className="flex h-dvh flex-col bg-background text-foreground">
-      <AppHeader />
-      <ContextBar />
+      <div className="vicky-hero shrink-0">
+        <AppHeader transparent />
+        <div className="px-5 pb-4">
+          <ContextBar bare />
+        </div>
+      </div>
       <ClientOnly fallback={<Loading />}>
         <SessionGate>
           {(founderId) => <Workspace founderId={founderId} id={id} search={search} />}
@@ -231,8 +235,7 @@ function Workspace({
   const sidebar = (
     <div className="flex h-full flex-col gap-6 p-4">
       <Button
-        variant="outline"
-        className="justify-start bg-card"
+        className="justify-start rounded-lg bg-white text-navy hover:bg-white/90"
         disabled={busy || pending}
         onClick={() => void newChat()}
       >
@@ -250,7 +253,7 @@ function Workspace({
             return (
               rows.length > 0 && (
                 <section key={group}>
-                  <h2 className="mb-2 px-2 text-[11px] font-semibold uppercase text-muted-foreground">
+                  <h2 className="mb-2 px-2 text-xs font-semibold uppercase text-muted-foreground">
                     {group}
                   </h2>
                   <div className="space-y-1">
@@ -333,14 +336,16 @@ function Workspace({
   return (
     <div className="flex min-h-0 flex-1">
       <aside
-        className="hidden w-64 shrink-0 border-r border-border bg-section md:block"
+        className="on-navy hidden w-64 shrink-0 bg-navy text-foreground md:block"
         aria-label="Saved chats"
       >
         {sidebar}
       </aside>
       <Sheet open={drawer} onOpenChange={setDrawer}>
-        <SheetContent side="left" className="w-72 bg-section p-0">
-          <SheetTitle className="px-4 pt-5 text-lg">Your chats</SheetTitle>
+        <SheetContent side="left" className="on-navy w-72 border-none bg-navy p-0 text-foreground">
+          <SheetTitle className="font-heading px-4 pt-5 text-lg text-foreground">
+            Your chats
+          </SheetTitle>
           {sidebar}
         </SheetContent>
       </Sheet>
@@ -357,7 +362,7 @@ function Workspace({
               <Menu />
             </Button>
             <VickyAvatar small active={busy || speaking} />
-            <h1 className="text-base font-semibold">Vicky</h1>
+            <h1 className="font-heading text-xl font-bold text-navy">Vicky</h1>
             <ToggleGroup
               type="single"
               value={settings.mode}
@@ -418,14 +423,14 @@ function Workspace({
           )
         ) : (
           <div className="flex min-h-0 flex-1 flex-col">
-            <div className="flex flex-1 flex-col items-center justify-center gap-5 px-5">
+            <div className="flex flex-1 flex-col items-center justify-center gap-6 overflow-y-auto px-5 py-6">
               <VickyAvatar />
-              <div className="flex max-w-xl flex-col gap-2">
+              <div className="grid w-full max-w-2xl gap-3 sm:grid-cols-2">
                 {chatSuggestions(dashboard.coach?.plan ?? []).map((prompt) => (
                   <Button
                     key={prompt}
                     variant="outline"
-                    className="h-auto whitespace-normal py-3 text-left text-xs"
+                    className="vicky-card-glow h-auto justify-start whitespace-normal rounded-2xl border-none px-5 py-4 text-left text-sm font-medium text-navy shadow-sm hover:opacity-90"
                     disabled={pending}
                     onClick={() => void newChat(prompt)}
                   >
@@ -440,7 +445,10 @@ function Workspace({
                   {speech.error}
                 </p>
               )}
-              <PromptInput onSubmit={({ text }) => (text.trim() ? newChat(text) : undefined)}>
+              <PromptInput
+                className="[&_[data-slot=input-group]]:rounded-2xl [&_[data-slot=input-group]]:shadow-[var(--shadow-elegant)]"
+                onSubmit={({ text }) => (text.trim() ? newChat(text) : undefined)}
+              >
                 <PromptInputTextarea
                   aria-label="Message"
                   placeholder="Ask about your numbers…"

@@ -24,7 +24,11 @@ const month = (v: string) =>
   });
 export function RevenuePreview({ rows }: { rows: MonthRow[] }) {
   return (
-    <div className="h-44 min-w-0" role="img" aria-label="Recurring revenue by month">
+    <div
+      className="on-navy h-48 min-w-0 rounded-xl bg-card p-3"
+      role="img"
+      aria-label="Recurring revenue by month"
+    >
       <ResponsiveContainer>
         <LineChart data={rows}>
           <CartesianGrid vertical={false} stroke="var(--border)" />
@@ -34,9 +38,10 @@ export function RevenuePreview({ rows }: { rows: MonthRow[] }) {
           <Line
             dataKey="recurringRevenue"
             name="Recurring revenue"
-            stroke="var(--primary)"
+            stroke="var(--chart-1)"
+            className="vicky-line-glow"
             dot={false}
-            strokeWidth={2}
+            strokeWidth={3}
             isAnimationActive={false}
           />
         </LineChart>
