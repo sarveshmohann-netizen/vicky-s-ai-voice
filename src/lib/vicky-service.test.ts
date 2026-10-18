@@ -13,7 +13,7 @@ import type { Database } from '@/integrations/supabase/types';
 
 const founder = '6997c3be-193f-4536-90da-7e2bf8c4c0a3';
 const valid = JSON.stringify({ evidence: 4, clarity: 3, accuracy: 2, ownership: 1, coachingNote: 'Cite the data.', improvedAnswer: 'Here is the evidence.' });
-const row: Tables<'practice_records'> = { id: 'attempt', founder_id: founder, question_id: 'arr', topic: 'growth', grade: { evidence: 4, clarity: 4, accuracy: 4, ownership: 4 }, coaching_note: 'Good', improved_answer: 'Better', created_at: '2026-10-17T22:45:00Z' };
+const row: Tables<'practice_records'> = { id: 'attempt', founder_id: founder, company_id: null, question_id: 'arr', topic: 'growth', grade: { evidence: 4, clarity: 4, accuracy: 4, ownership: 4 }, coaching_note: 'Good', improved_answer: 'Better', created_at: '2026-10-17T22:45:00Z' };
 
 describe('Vicky server boundaries', () => {
   it('allows only the signed-in founder to access practice', () => {

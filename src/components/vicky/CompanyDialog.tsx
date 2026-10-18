@@ -23,7 +23,7 @@ const FIELDS = [
   ['planMonthlyGrowth', 'Monthly growth your forecast assumes %', 'Enter 5 for 5% monthly growth.', true],
 ] as const;
 const LINE_LABELS: Record<string, string> = { recurringRevenue:'Recurring revenue', otherRevenue:'One-time revenue', totalRevenue:'Total revenue', cogs:'Cost of revenue', grossProfit:'Gross profit', salesMarketing:'Sales and marketing', marketingPrograms:'Marketing programs', support:'Support', rnd:'R&D', ga:'G&A', totalOpex:'Total operating expenses', operatingIncome:'Operating income', otherIncome:'Other income', netIncome:'Net income', ignore:'Ignored' };
-type Props = { companyId?: string; onSaved: (id: string) => void; onClose: () => void };
+type Props = { companyId?: string | undefined; onSaved: (id: string) => void; onClose: () => void };
 export function CompanyDialog({ companyId, onSaved, onClose }: Props) {
   const cache = useQueryClient();
   const [step, setStep] = useState(companyId ? 3 : 1);
@@ -54,11 +54,11 @@ export function CompanyDialog({ companyId, onSaved, onClose }: Props) {
   async function save() {
     setBusy(true); setError('');
     try {
-      const profile: Record<string,unknown> = { name:values.name, currency:values.currency || 'USD' };
+      const profile: Record<string,unknown> = { name:values['name'], currency:values['currency'] || 'USD' };
       for (const [key,,,percent] of FIELDS) if (values[key]?.trim()) profile[key] = percent ? percentToDecimal(values[key]) : Number(values[key]);
       const deck: Record<string,number> = {};
       for (const [key, label] of Object.entries(DECK_LABELS)) if (values['deck.'+key]?.trim()) deck[key] = label.unit === 'pct' ? Number(values['deck.'+key])/100 : Number(values['deck.'+key]);
-      profile.deck = deck;
+      profile['deck'] = deck;
       const validated = companyProfileSchema.parse(profile);
       const company = companyId ? await updateCompanyDetails({ data:{id:companyId, profile:validated} }) : await saveCompany({ data:{ source_csv:csv, profile:validated } });
       await Promise.all([cache.invalidateQueries({queryKey:['companies']}),cache.invalidateQueries({queryKey:['company-dashboard']}),cache.invalidateQueries({queryKey:['company-details']})]);
@@ -73,6 +73,6 @@ export function CompanyDialog({ companyId, onSaved, onClose }: Props) {
     {step===2 && parsed && <><div className="max-h-60 overflow-auto rounded-md border border-border"><table className="w-full text-left text-xs"><thead className="sticky top-0 bg-muted"><tr><th className="p-3">Column</th><th className="p-3">Mapped to</th></tr></thead><tbody>{parsed.mapping.map((m,i)=><tr key={i} className="border-t border-border"><td className="p-3">{m.column}</td><td className="p-3">{LINE_LABELS[m.line] ?? m.line}</td></tr>)}</tbody></table></div>{parsed.warnings.map((w,i)=><p key={i} className="text-xs leading-relaxed text-muted-foreground">{w}</p>)}{parsed.rows.length>0 && <><p className="text-xs font-semibold">Recurring revenue · {parsed.rows.length} months</p><RevenuePreview rows={parsed.rows}/></>}</>}
     {step===3 && <><div className="grid gap-5 sm:grid-cols-2">{field('name','Company name',undefined,false)}{field('currency','Currency','Three-letter currency code, e.g. USD or CAD.',false)}{FIELDS.map(([key,label,hint])=>field(key,label,hint))}</div><h3 className="mt-5 font-semibold">What does your deck say?</h3><div className="grid gap-5 sm:grid-cols-2">{Object.entries(DECK_LABELS).map(([key,meta])=>field('deck.'+key,meta.label+(meta.unit==='pct'?' %':meta.unit==='months'?' in months':'')))}</div></>}
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-    <div className="mt-4 flex justify-between gap-3">{!companyId && step>1 ? <Button variant="ghost" disabled={busy} onClick={()=>setStep(step-1)}><ArrowLeft className="size-4"/>Back</Button>:<span/>}{step===2?<Button disabled={!parsed?.rows.length} onClick={()=>setStep(3)}>Continue<ArrowRight className="size-4"/></Button>:step===3?<Button disabled={busy || !values.name?.trim()} onClick={()=>void save()}><Save className="size-4"/>{busy?'Saving…':'Save company'}</Button>:null}</div></>}
+    <div className="mt-4 flex justify-between gap-3">{!companyId && step>1 ? <Button variant="ghost" disabled={busy} onClick={()=>setStep(step-1)}><ArrowLeft className="size-4"/>Back</Button>:<span/>}{step===2?<Button disabled={!parsed?.rows.length} onClick={()=>setStep(3)}>Continue<ArrowRight className="size-4"/></Button>:step===3?<Button disabled={busy || !values['name']?.trim()} onClick={()=>void save()}><Save className="size-4"/>{busy?'Saving…':'Save company'}</Button>:null}</div></>}
   </DialogContent></Dialog>;
 }

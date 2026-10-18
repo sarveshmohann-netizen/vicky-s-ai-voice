@@ -126,7 +126,6 @@ export function SavedChat({
         {
           id: "pending",
           conversation_id: conversation.id,
-          company_id: conversation.company_id,
           role: "user",
           content: content.trim(),
           created_at: new Date().toISOString(),

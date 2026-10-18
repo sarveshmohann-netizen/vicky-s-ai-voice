@@ -8,7 +8,7 @@ const month = (v:string) => new Date(v+'-01T00:00:00Z').toLocaleDateString('en-U
 export function RevenuePreview({rows}:{rows:MonthRow[]}) {return <div className="h-44 min-w-0" role="img" aria-label="Recurring revenue by month"><ResponsiveContainer><LineChart data={rows}><CartesianGrid vertical={false} stroke="var(--border)"/><XAxis dataKey="month" tickFormatter={month} tick={tick}/><YAxis tickFormatter={compact} tick={tick}/><Tooltip/><Line dataKey="recurringRevenue" name="Recurring revenue" stroke="var(--primary)" dot={false} strokeWidth={2} isAnimationActive={false}/></LineChart></ResponsiveContainer></div>;}
 export function CompanyCharts({charts,currency}:{charts:Charts;currency:string}) {
   const cash = (n:number) => new Intl.NumberFormat('en-US',{style:'currency',currency,notation:'compact',maximumFractionDigits:1}).format(n);
-  const sections = [
+  const sections: {title:string;data:unknown[];series:[string,string,string][];percent:boolean}[] = [
     {title:'Recurring revenue',data:charts.mrr,series:[['actual','Actual','--primary'],['atRecentPace','At recent pace','--chart-4'],['plan','Plan','--chart-2']],percent:false},
     {title:'Growth by month',data:charts.growth,series:[['growth','Monthly growth','--primary']],percent:true},
     {title:'Burn by month',data:charts.burn,series:[['operatingLoss','Operating loss','--primary'],['otherIncome','Other income','--chart-3']],percent:false},
