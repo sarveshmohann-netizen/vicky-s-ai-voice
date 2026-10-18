@@ -183,7 +183,7 @@ function Workspace({
           cache.setQueryData(["conversation", id], { ...active.data, conversation: chat }),
         )
         .catch((e) => setError(e.message));
-  }, [id, active.data, settings.persona, settings.stage, settings.mode, busy]);
+  }, [id, active.data, settings.persona, settings.stage, settings.mode, busy, cache, settings]);
   async function confirm() {
     if (!dialog) return;
     setPending(true);

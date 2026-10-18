@@ -36,12 +36,12 @@ export function CompanySwitcher({ founderId }: { founderId?: string | undefined 
   }
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-2">
-      <Building2 className="size-4 text-muted-foreground" />
+      <Building2 className="hidden size-4 text-muted-foreground sm:block" />
       <Select
         value={choice.company_id ?? "sample"}
         onValueChange={(v) => void select(v === "sample" ? undefined : v)}
       >
-        <SelectTrigger aria-label="Company" className="w-full min-w-0 bg-card sm:w-48">
+        <SelectTrigger aria-label="Company" className="w-44 min-w-0 bg-card sm:w-48">
           <SelectValue>
             {selected?.name ?? (choice.company_id ? "Your company" : "Sample: Tidewell")}
           </SelectValue>

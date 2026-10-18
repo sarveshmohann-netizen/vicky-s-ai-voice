@@ -19,7 +19,7 @@ export function MeetingPickers({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="w-full min-w-0 sm:w-52">
+      <div className="w-52 min-w-0">
         <label id="investor-label" className="sr-only">
           Who are you pitching?
         </label>
