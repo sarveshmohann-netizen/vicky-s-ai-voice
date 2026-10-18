@@ -4,6 +4,7 @@
 // next to what the numbers support.
 
 import { PERSONAS, QUESTIONS, STAGES, selectQuestions, type Persona, type PersonaId, type PracticeRecord, type Stage, type StageProfile, type Topic } from "../knowledge.ts";
+import { investorLens, type Lens } from "../lens.ts";
 import { analyzeTidewell, toKnowledgeAnalysis, type TidewellAnalysis } from "./analysis.ts";
 import { shortRefs } from "./refs.ts";
 
@@ -27,6 +28,7 @@ export interface BriefQuestion {
 export interface MeetingBrief {
   investor: Persona;
   stage: StageProfile;
+  lens: Lens; // which metrics this investor reads first, against which published bar
   headline: string;
   tighten: TightenItem[];
   questions: BriefQuestion[];
@@ -83,5 +85,5 @@ export function meetingBrief(personaId: PersonaId, stageId: Stage, history: Prac
   const highPlan = t.audit.filter((a) => a.verdict === "high").length;
   const headline = `${fixes} of ${t.claims.length} deck claims would fall apart on the first follow-up question, and ${highPlan} plan assumptions run well ahead of what Tidewell has done so far. The business is stronger than some of those claims make it look, so most of the work is restating numbers the standard way.`;
 
-  return { investor, stage, headline, tighten, questions, alsoAsk: investor.ownQuestions };
+  return { investor, stage, lens: investorLens(t.metrics, personaId, stageId), headline, tighten, questions, alsoAsk: investor.ownQuestions };
 }
