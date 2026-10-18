@@ -30,9 +30,10 @@ export function lessonsFromRows(rows: Tables<'lessons'>[]): Lesson[] {
   return rows.map(row => ({ id: row.id, text: row.text, at: row.created_at, topics: row.topics.includes('all') ? 'all' : row.topics.filter(isTopic) }));
 }
 
-export async function loadFounderData(client: SupabaseClient<Database>, founderId: string, withLessons = false) {
+export async function loadFounderData(client: SupabaseClient<Database>, founderId: string, withLessons = false, companyId?: string | null) {
+  const recordsQuery = client.from('practice_records').select('*').eq('founder_id', founderId);
   const [records, corrections] = await Promise.all([
-    client.from('practice_records').select('*').eq('founder_id', founderId).order('created_at', { ascending: true }),
+    (companyId ? recordsQuery.eq('company_id', companyId) : recordsQuery.is('company_id', null)).order('created_at', { ascending: true }),
     withLessons ? client.from('lessons').select('*').order('created_at', { ascending: true }) : Promise.resolve({ data: [], error: null }),
   ]);
   if (records.error || corrections.error) throw new Error('Could not load Vicky’s saved practice and lessons.');

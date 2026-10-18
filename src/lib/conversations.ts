@@ -9,6 +9,7 @@ export const practiceSearchSchema = meetingSearchSchema.extend({
   mode: z.enum(["question", "ask", "simulate"]).catch("ask"),
 });
 export const settingsSchema = z.object({
+  company_id: z.string().uuid().nullable().optional(),
   mode: modeSchema,
   persona: personaSchema,
   stage: stageSchema,

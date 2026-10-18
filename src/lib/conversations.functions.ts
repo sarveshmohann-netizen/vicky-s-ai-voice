@@ -23,7 +23,7 @@ export const createConversation = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: row, error } = await context.supabase
       .from("conversations")
-      .insert({ ...data, founder_id: context.userId })
+      .insert({ ...data, company_id: data.company_id ?? null, founder_id: context.userId })
       .select("*")
       .single();
     if (error || !row) throw new Error("Could not create this chat.");
@@ -67,7 +67,7 @@ export const updateConversation = createServerFn({ method: "POST" })
     const { data: row, error } = await context.supabase
       .from("conversations")
       .update({
-        ...data.settings,
+        ...(data.settings ? { mode:data.settings.mode, persona:data.settings.persona, stage:data.settings.stage, company_id: data.settings.company_id ?? null } : {}),
         ...(data.title ? { title: data.title } : {}),
         updated_at: new Date().toISOString(),
       })

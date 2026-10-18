@@ -82,6 +82,7 @@ function Workspace({
   const [title, setTitle] = useState("");
   const opening = useRef(false);
   const settings: Settings = active.data?.conversation ?? {
+    company_id: search.company_id ?? null,
     persona: search.persona,
     stage: search.stage,
     mode: search.mode === "simulate" ? "simulate" : "ask",
@@ -104,6 +105,7 @@ function Workspace({
           persona: chat.persona,
           stage: chat.stage,
           mode: chat.mode,
+          company_id: chat.company_id ?? undefined,
           ...(question ? { question } : {}),
         },
       });
@@ -129,10 +131,10 @@ function Workspace({
         await navigate({
           to: "/practice/$conversationId",
           params: { conversationId: id },
-          search: { ...next },
+          search: { ...next, company_id: next.company_id ?? undefined },
           replace: true,
         });
-      } else await navigate({ to: "/practice", search: next, replace: true });
+      } else await navigate({ to: "/practice", search: { ...next, company_id: next.company_id ?? undefined }, replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save chat settings.");
     }
@@ -144,7 +146,7 @@ function Workspace({
     try {
       if (dialog.type === "delete") {
         await deleteConversation({ data: { id: dialog.chat.id } });
-        if (id === dialog.chat.id) await navigate({ to: "/practice", search: { ...settings } });
+        if (id === dialog.chat.id) await navigate({ to: "/practice", search: { ...settings, company_id: settings.company_id ?? undefined } });
       } else {
         const chat = await updateConversation({ data: { id: dialog.chat.id, title } });
         if (chat.id === id)
@@ -203,7 +205,7 @@ function Workspace({
                           <Link
                             to="/practice/$conversationId"
                             params={{ conversationId: chat.id }}
-                            search={{ persona: chat.persona, stage: chat.stage, mode: chat.mode }}
+                            search={{ persona: chat.persona, stage: chat.stage, mode: chat.mode, company_id: chat.company_id ?? undefined }}
                             onClick={(e) => {
                               if (busy) {
                                 e.preventDefault();
@@ -255,7 +257,7 @@ function Workspace({
           })
         )}
       </div>
-      <p className="px-2 text-xs text-muted-foreground">Tidewell · Investor practice</p>
+      <p className="px-2 text-xs text-muted-foreground">Investor practice</p>
     </div>
   );
   return (
@@ -333,7 +335,7 @@ function Workspace({
               key={id}
               conversation={active.data.conversation}
               initialMessages={active.data.messages}
-              launch={QUESTIONS.find((q) => q.id === search.question)?.question}
+              launch={(() => { const q=QUESTIONS.find(q=>q.id===search.question); return active.data.conversation.company_id ? q?.genericQuestion ?? q?.question : q?.question; })()}
               onBusy={setBusy}
             />
           )

@@ -14,8 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      companies: {
+        Row: {
+          created_at: string
+          currency: string
+          founder_id: string
+          id: string
+          name: string
+          parsed: Json
+          profile: Json
+          source_csv: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          founder_id?: string
+          id?: string
+          name: string
+          parsed: Json
+          profile?: Json
+          source_csv: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          founder_id?: string
+          id?: string
+          name?: string
+          parsed?: Json
+          profile?: Json
+          source_csv?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
+          company_id: string | null
           created_at: string
           founder_id: string
           id: string
@@ -26,6 +63,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           founder_id?: string
           id?: string
@@ -36,6 +74,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           founder_id?: string
           id?: string
@@ -45,7 +84,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "conversations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lessons: {
         Row: {
@@ -103,6 +150,7 @@ export type Database = {
       practice_records: {
         Row: {
           coaching_note: string
+          company_id: string | null
           created_at: string
           founder_id: string
           grade: Json
@@ -113,6 +161,7 @@ export type Database = {
         }
         Insert: {
           coaching_note?: string
+          company_id?: string | null
           created_at?: string
           founder_id?: string
           grade: Json
@@ -123,6 +172,7 @@ export type Database = {
         }
         Update: {
           coaching_note?: string
+          company_id?: string | null
           created_at?: string
           founder_id?: string
           grade?: Json
@@ -131,7 +181,15 @@ export type Database = {
           question_id?: string
           topic?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "practice_records_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

@@ -23,3 +23,5 @@
 - Keep saved chat identity in a dedicated Practice URL and enforce conversation ownership through RLS and authenticated server calls; this restores the correct history on reload.
 - Prepare edits and regeneration atomically in database functions, and save completed replies in the existing SSE server handler with a version guard; this prevents stale replies overwriting newer chat state.
 - Compose saved-chat UI from AI Elements while preserving Vicky's existing RPC and SSE transport; this retains the requested endpoint and citation behavior without changing engine logic.
+- Import the read-only company parser, analysis, brief and lens engine through company adapters; keep uploaded parses canonical by reparsing CSV on save and never return source CSV in reads.
+- Scope conversations and practice records by an optional company association with owner validation; null associations retain sample behavior and prevent uploaded-company coaching contaminating sample readiness.
