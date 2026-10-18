@@ -13,28 +13,31 @@ import {
 import { listCompanies } from "@/lib/companies.functions";
 import { meetingSearchSchema } from "@/lib/vicky-inputs";
 import { CompanyDialog } from "./CompanyDialog";
-export function CompanySwitcher({ founderId }: { founderId: string }) {
+import { SessionGate } from "./AppShell";
+import { Dialog,DialogContent,DialogTitle } from "@/components/ui/dialog";
+export function CompanySwitcher({ founderId }: { founderId?: string | undefined }) {
   const location = useLocation();
   const navigate = useNavigate();
   const choice = meetingSearchSchema.parse(location.search);
   const companies = useQuery({
     queryKey: ["companies", founderId],
     queryFn: () => listCompanies(),
+    enabled: !!founderId,
   });
   const [dialog, setDialog] = useState<"add" | "edit" | null>(null);
   const selected = companies.data?.find((c) => c.id === choice.company_id);
   async function select(id?: string) {
-    const to = location.pathname.startsWith("/practice") ? "/practice" : "/";
+    const to = location.pathname.startsWith("/practice") ? "/practice" : location.pathname === "/learn" ? "/learn" : "/";
     await navigate({ to, search: { ...choice, company_id: id, mode: "ask" } });
   }
   return (
-    <div className="mb-5 flex min-w-0 flex-wrap items-center gap-2">
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
       <Building2 className="size-4 text-muted-foreground" />
       <Select
         value={choice.company_id ?? "sample"}
         onValueChange={(v) => void select(v === "sample" ? undefined : v)}
       >
-        <SelectTrigger aria-label="Company" className="w-full min-w-0 bg-card sm:w-64">
+        <SelectTrigger aria-label="Company" className="w-full min-w-0 bg-card sm:w-48">
           <SelectValue>
             {selected?.name ?? (choice.company_id ? "Your company" : "Sample: Tidewell")}
           </SelectValue>
@@ -63,7 +66,8 @@ export function CompanySwitcher({ founderId }: { founderId: string }) {
           {companies.error.message}
         </p>
       )}
-      {dialog && (
+      {dialog && !founderId && <Dialog open onOpenChange={() => setDialog(null)}><DialogContent><DialogTitle>Add your company</DialogTitle><SessionGate>{() => <CompanyDialog onClose={() => setDialog(null)} onSaved={() => setDialog(null)} />}</SessionGate></DialogContent></Dialog>}
+      {dialog && founderId && (
         <CompanyDialog
           key={dialog + (choice.company_id ?? "")}
           companyId={dialog === "edit" ? choice.company_id : undefined}

@@ -199,3 +199,10 @@
   .metric-card { transition: none; }
   .metric-card:hover { transform: none; }
 }
+.vicky-avatar.is-speaking img { animation: vicky-ring 1.4s ease-in-out infinite; }
+.vicky-dots { display:flex; gap:3px; position:absolute; bottom:-9px; }
+.vicky-dots i { width:4px; height:4px; border-radius:50%; background:var(--primary); animation:vicky-bounce 1s infinite; }
+.vicky-dots i:nth-child(2){animation-delay:.15s}.vicky-dots i:nth-child(3){animation-delay:.3s}
+@keyframes vicky-bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
+@keyframes vicky-ring{50%{box-shadow:0 0 0 5px var(--secondary)}}
+@media(prefers-reduced-motion:reduce){.vicky-dots i{animation-name:vicky-fade}.vicky-avatar.is-speaking img{animation:none} @keyframes vicky-fade{50%{opacity:1}0%,100%{opacity:.3}}}

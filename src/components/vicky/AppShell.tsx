@@ -7,21 +7,18 @@ import { Button } from '@/components/ui/button';
 import { lovable } from '@/integrations/lovable';
 import { supabase } from '@/integrations/supabase/client';
 import { meetingSearchSchema } from '@/lib/vicky-inputs';
-import { CompanySwitcher } from './CompanySwitcher';
+
 
 const NAV = [
-  { to: '/', label: 'Meeting prep' },
-  { to: '/practice', label: 'Practice' },
+  { to: '/', label: 'Dashboard' },
+  { to: '/practice', label: 'Vicky' },
+  { to: '/learn', label: 'Learn' },
 ] as const;
 
 export function AppShell({ title, eyebrow, intro, children }: { title: string; eyebrow: string; intro: string; children: (userId: string) => ReactNode }) {
   return <div className="min-h-screen bg-background text-foreground">
     <AppHeader />
-    <div className="vicky-intro">
-      <p className="mb-4 text-xs font-semibold uppercase text-primary">{eyebrow}</p>
-      <h1 className="text-4xl md:text-5xl">{title}</h1>
-      <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">{intro}</p>
-    </div>
+    <h1 className="mx-auto max-w-6xl px-5 pt-6 text-xl font-semibold">{title}</h1>
     <main className="vicky-content mx-auto max-w-6xl px-5 md:px-8">
       <ClientOnly fallback={<Loading />}><SessionGate>{children}</SessionGate></ClientOnly>
     </main>
@@ -72,11 +69,10 @@ export function SessionGate({ children }: { children: (userId: string) => ReactN
     {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
   </section>;
   return <>
-    <div className="mb-6 flex items-center justify-end gap-3 text-xs text-muted-foreground">
+    <div className="flex items-center justify-end gap-3 px-4 py-2 text-xs text-muted-foreground">
       <span className="min-w-0 truncate">{session.user.email}</span>
       <Button variant="ghost" size="sm" onClick={async () => { queryClient.clear(); await supabase.auth.signOut(); }}><LogOut className="size-3.5" />Sign out</Button>
     </div>
-    <CompanySwitcher founderId={session.user.id} />
     {children(session.user.id)}
   </>;
 }
