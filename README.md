@@ -1,6 +1,6 @@
 # Vicky's AI Voice
 
-Don't use any usage credits for this. i solely want to create a project called Vicky AI VC
+Vicky AI VC
 
 This project was built with [Lovable](https://lovable.dev).
 
