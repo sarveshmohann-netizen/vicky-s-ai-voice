@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,13 +13,21 @@ import { formatMetric, type Metric } from "@/lib/vicky/tidewell/metrics";
 import { shortRefs } from "@/lib/vicky/tidewell/refs";
 import { Sources } from "./Sources";
 
-export function MetricsDialog({ metrics }: { metrics: Record<string, Metric> }) {
+export function MetricsDialog({
+  metrics,
+  trigger,
+}: {
+  metrics: Record<string, Metric>;
+  trigger?: ReactNode;
+}) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="link" className="px-0 text-xs">
-          All numbers <Info className="size-3" />
-        </Button>
+        {trigger ?? (
+          <Button variant="link" className="px-0 text-xs">
+            All numbers <Info className="size-3" />
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader>
@@ -32,7 +41,7 @@ export function MetricsDialog({ metrics }: { metrics: Record<string, Metric> }) 
                   <article tabIndex={0} className="metric-card rounded-lg border border-border p-4">
                     <p className="text-xs text-muted-foreground">{m.label}</p>
                     <p className="my-2 text-xl font-semibold tabular-nums">{formatMetric(m)}</p>
-                    <span className="text-[10px] font-semibold uppercase text-accent">
+                    <span className="text-xs font-semibold uppercase text-accent">
                       {m.basis === "historical" ? "Historical" : "Forecast"}
                     </span>
                     <div className="mt-2">

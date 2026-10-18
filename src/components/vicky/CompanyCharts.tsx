@@ -12,6 +12,7 @@ import {
 import type { CompanyCharts as Charts } from "@/lib/vicky/company/analysis";
 import type { MonthRow } from "@/lib/vicky/company/parse";
 import { StatusBadge } from "./MeetingCharts";
+import { ChartTooltip } from "./ChartTooltip";
 const tick = { fill: "var(--muted-foreground)", fontSize: 10 };
 const compact = (n: number) =>
   new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(n);
@@ -29,7 +30,7 @@ export function RevenuePreview({ rows }: { rows: MonthRow[] }) {
           <CartesianGrid vertical={false} stroke="var(--border)" />
           <XAxis dataKey="month" tickFormatter={month} tick={tick} />
           <YAxis tickFormatter={compact} tick={tick} />
-          <Tooltip />
+          <Tooltip content={<ChartTooltip kind="usd" />} />
           <Line
             dataKey="recurringRevenue"
             name="Recurring revenue"
@@ -177,7 +178,13 @@ export function CompanyCharts({ charts, currency }: { charts: Charts; currency: 
                     >
                       <XAxis type="number" hide />
                       <YAxis type="category" dataKey="name" tick={tick} width={35} />
-                      <Tooltip />
+                      <Tooltip
+                        content={
+                          <ChartTooltip
+                            kind={d.unit === "pct" ? "pct" : d.unit === "months" ? "months" : "usd"}
+                          />
+                        }
+                      />
                       <Bar
                         dataKey="value"
                         fill="var(--primary)"

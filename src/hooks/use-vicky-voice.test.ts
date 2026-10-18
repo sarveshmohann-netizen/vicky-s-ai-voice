@@ -9,7 +9,7 @@ class FakeRecognition {
   onresult: ((e: { results: { isFinal: boolean; 0: { transcript: string } }[] }) => void) | null =
     null;
   onend: (() => void) | null = null;
-  onerror: (() => void) | null = null;
+  onerror: ((e?: { error?: string }) => void) | null = null;
   constructor() {
     FakeRecognition.latest = this;
   }
@@ -55,7 +55,7 @@ it("reads cleaned replies and clears speaking when finished", () => {
   class Utterance {
     onstart: (() => void) | null = null;
     onend: (() => void) | null = null;
-    onerror: (() => void) | null = null;
+    onerror: ((e?: { error?: string }) => void) | null = null;
     constructor(public text: string) {}
   }
   let spoken: Utterance | undefined;
@@ -73,5 +73,34 @@ it("reads cleaned replies and clears speaking when finished", () => {
   expect(hook.result.current.speaking).toBe(true);
   act(() => spoken?.onend?.());
   expect(hook.result.current.speaking).toBe(false);
+  hook.unmount();
+});
+it("keeps listening through short pauses and sends after a longer one", () => {
+  vi.useFakeTimers();
+  vi.stubGlobal("SpeechRecognition", FakeRecognition);
+  const onSend = vi.fn();
+  const hook = renderHook(() => useVickyVoice({ onDraft: vi.fn(), onSend }));
+  act(() => hook.result.current.dictate());
+  expect(FakeRecognition.latest.continuous).toBe(true);
+  act(() =>
+    FakeRecognition.latest.onresult?.({
+      results: [{ isFinal: true, 0: { transcript: "How long is my runway" } }],
+    }),
+  );
+  act(() => vi.advanceTimersByTime(500));
+  expect(hook.result.current.listening).toBe(true);
+  act(() => vi.advanceTimersByTime(2000));
+  expect(onSend).toHaveBeenCalledWith("How long is my runway");
+  expect(hook.result.current.listening).toBe(false);
+  vi.useRealTimers();
+  hook.unmount();
+});
+it("explains a blocked microphone instead of silently switching off", () => {
+  vi.stubGlobal("SpeechRecognition", FakeRecognition);
+  const hook = renderHook(() => useVickyVoice({ onDraft: vi.fn(), onSend: vi.fn() }));
+  act(() => hook.result.current.dictate());
+  act(() => FakeRecognition.latest.onerror?.({ error: "not-allowed" }));
+  expect(hook.result.current.listening).toBe(false);
+  expect(hook.result.current.error).toMatch(/microphone/);
   hook.unmount();
 });
