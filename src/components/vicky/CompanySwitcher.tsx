@@ -14,7 +14,7 @@ import { listCompanies } from "@/lib/companies.functions";
 import { meetingSearchSchema } from "@/lib/vicky-inputs";
 import { CompanyDialog } from "./CompanyDialog";
 import { SessionGate } from "./AppShell";
-import { Dialog,DialogContent,DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 export function CompanySwitcher({ founderId }: { founderId?: string | undefined }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -27,7 +27,11 @@ export function CompanySwitcher({ founderId }: { founderId?: string | undefined 
   const [dialog, setDialog] = useState<"add" | "edit" | null>(null);
   const selected = companies.data?.find((c) => c.id === choice.company_id);
   async function select(id?: string) {
-    const to = location.pathname.startsWith("/practice") ? "/practice" : location.pathname === "/learn" ? "/learn" : "/";
+    const to = location.pathname.startsWith("/practice")
+      ? "/practice"
+      : location.pathname === "/learn"
+        ? "/learn"
+        : "/";
     await navigate({ to, search: { ...choice, company_id: id, mode: "ask" } });
   }
   return (
@@ -66,7 +70,18 @@ export function CompanySwitcher({ founderId }: { founderId?: string | undefined 
           {companies.error.message}
         </p>
       )}
-      {dialog && !founderId && <Dialog open onOpenChange={() => setDialog(null)}><DialogContent><DialogTitle>Add your company</DialogTitle><SessionGate>{() => <CompanyDialog onClose={() => setDialog(null)} onSaved={() => setDialog(null)} />}</SessionGate></DialogContent></Dialog>}
+      {dialog && !founderId && (
+        <Dialog open onOpenChange={() => setDialog(null)}>
+          <DialogContent>
+            <DialogTitle>Add your company</DialogTitle>
+            <SessionGate>
+              {() => (
+                <CompanyDialog onClose={() => setDialog(null)} onSaved={() => setDialog(null)} />
+              )}
+            </SessionGate>
+          </DialogContent>
+        </Dialog>
+      )}
       {dialog && founderId && (
         <CompanyDialog
           key={dialog + (choice.company_id ?? "")}

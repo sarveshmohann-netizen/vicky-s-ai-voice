@@ -1,12 +1,100 @@
-import { useEffect,useRef,useState } from 'react';
-import { cleanReplyText } from '@/lib/vicky-dashboard';
-interface Recognition { continuous:boolean;interimResults:boolean;lang:string;start:()=>void;stop:()=>void;abort:()=>void;onresult:((e:{results:{isFinal:boolean;0:{transcript:string}}[]})=>void)|null;onend:(()=>void)|null;onerror:(()=>void)|null }
-export function useVickyVoice({onDraft,onSend}:{onDraft:(text:string)=>void;onSend:(text:string)=>void}){
- const [supported,setSupported]=useState(false),[listening,setListening]=useState(false),[speaking,setSpeaking]=useState(false);
- const recognition=useRef<Recognition|null>(null),heard=useRef(''),cancelled=useRef(false),callbacks=useRef({onDraft,onSend});callbacks.current={onDraft,onSend};
- useEffect(()=>{const w=window as unknown as {SpeechRecognition?:new()=>Recognition;webkitSpeechRecognition?:new()=>Recognition};setSupported(!!(w.SpeechRecognition||w.webkitSpeechRecognition));return()=>{cancelled.current=true;recognition.current?.abort();window.speechSynthesis?.cancel();};},[]);
- function stop(){window.speechSynthesis?.cancel();setSpeaking(false);cancelled.current=true;recognition.current?.abort();setListening(false);}
- function dictate(){window.speechSynthesis?.cancel();setSpeaking(false);if(listening){recognition.current?.stop();return;}const w=window as unknown as {SpeechRecognition?:new()=>Recognition;webkitSpeechRecognition?:new()=>Recognition};const C=w.SpeechRecognition||w.webkitSpeechRecognition;if(!C)return;const r=new C();recognition.current=r;heard.current='';cancelled.current=false;r.continuous=false;r.interimResults=true;r.lang='en-US';r.onresult=e=>{heard.current=Array.from(e.results).map(result=>result[0].transcript).join(' ');callbacks.current.onDraft(heard.current);};r.onend=()=>{setListening(false);if(!cancelled.current&&heard.current.trim())callbacks.current.onSend(heard.current.trim());};r.onerror=()=>{cancelled.current=true;setListening(false);};try{r.start();setListening(true);}catch{setListening(false);}}
- function speak(text:string){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(cleanReplyText(text));utterance.onstart=()=>setSpeaking(true);utterance.onend=()=>setSpeaking(false);utterance.onerror=()=>setSpeaking(false);window.speechSynthesis.speak(utterance);}
- return {supported,listening,speaking,stop,dictate,speak};
+import { useEffect, useRef, useState } from "react";
+import { cleanReplyText } from "@/lib/vicky-dashboard";
+interface Recognition {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+  onresult: ((e: { results: { isFinal: boolean; 0: { transcript: string } }[] }) => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+}
+export function useVickyVoice({
+  onDraft,
+  onSend,
+}: {
+  onDraft: (text: string) => void;
+  onSend: (text: string) => void;
+}) {
+  const [supported, setSupported] = useState(false),
+    [listening, setListening] = useState(false),
+    [speaking, setSpeaking] = useState(false);
+  const recognition = useRef<Recognition | null>(null),
+    heard = useRef(""),
+    cancelled = useRef(false),
+    callbacks = useRef({ onDraft, onSend });
+  callbacks.current = { onDraft, onSend };
+  useEffect(() => {
+    const w = window as unknown as {
+      SpeechRecognition?: new () => Recognition;
+      webkitSpeechRecognition?: new () => Recognition;
+    };
+    setSupported(!!(w.SpeechRecognition || w.webkitSpeechRecognition));
+    return () => {
+      cancelled.current = true;
+      recognition.current?.abort();
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
+  function stop() {
+    window.speechSynthesis?.cancel();
+    setSpeaking(false);
+    cancelled.current = true;
+    recognition.current?.abort();
+    setListening(false);
+  }
+  function dictate() {
+    window.speechSynthesis?.cancel();
+    setSpeaking(false);
+    if (listening) {
+      recognition.current?.stop();
+      return;
+    }
+    const w = window as unknown as {
+      SpeechRecognition?: new () => Recognition;
+      webkitSpeechRecognition?: new () => Recognition;
+    };
+    const C = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!C) return;
+    const r = new C();
+    recognition.current = r;
+    heard.current = "";
+    cancelled.current = false;
+    r.continuous = false;
+    r.interimResults = true;
+    r.lang = "en-US";
+    r.onresult = (e) => {
+      heard.current = Array.from(e.results)
+        .map((result) => result[0].transcript)
+        .join(" ");
+      callbacks.current.onDraft(heard.current);
+    };
+    r.onend = () => {
+      setListening(false);
+      if (!cancelled.current && heard.current.trim())
+        callbacks.current.onSend(heard.current.trim());
+    };
+    r.onerror = () => {
+      cancelled.current = true;
+      setListening(false);
+    };
+    try {
+      r.start();
+      setListening(true);
+    } catch {
+      setListening(false);
+    }
+  }
+  function speak(text: string) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(cleanReplyText(text));
+    utterance.onstart = () => setSpeaking(true);
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+  }
+  return { supported, listening, speaking, stop, dictate, speak };
 }

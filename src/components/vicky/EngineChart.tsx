@@ -1,9 +1,88 @@
-import { ResponsiveContainer,LineChart,Line,BarChart,Bar,CartesianGrid,XAxis,YAxis,Tooltip } from 'recharts';
-import { CHART_CATALOG,type ChartId } from '@/lib/vicky/coach';
-export function EngineChart({id,charts,inline=false}:{id:ChartId;charts:Partial<Record<ChartId,unknown[]>>;inline?:boolean}){
- const data=charts[id]; if(!data?.length)return null;
- const series:Record<ChartId,string[]>={mrr:['actual','plan','atRecentPace'],growth:['growth'],burn:['operatingLoss','otherIncome'],margin:['booked','withSupport'],customers:['netNew'],runway:['months'],deckVsData:['deck','data']};
- const axis=id==='customers'?'quarter':id==='runway'||id==='deckVsData'?'label':'month';
- const bars=['runway','customers','deckVsData'].includes(id);
- return <section className="min-w-0"><p className="mb-3 text-sm font-semibold">{CHART_CATALOG[id].title}</p>{inline&&<p className="mb-2 text-[10px] text-muted-foreground">From your dashboard</p>}<div className="h-[200px] w-full" role="img" aria-label={CHART_CATALOG[id].title}><ResponsiveContainer>{bars?<BarChart data={data}><CartesianGrid vertical={false} stroke="var(--border)"/><XAxis dataKey={axis} tick={{fontSize:9}}/><YAxis tick={{fontSize:10}} width={48}/><Tooltip/>{series[id].map((key,i)=><Bar key={key} dataKey={key} fill={i?'var(--chart-3)':'var(--primary)'} isAnimationActive={false}/>)}</BarChart>:<LineChart data={data}><CartesianGrid vertical={false} stroke="var(--border)"/><XAxis dataKey={axis} minTickGap={35} tick={{fontSize:9}}/><YAxis width={55} tick={{fontSize:10}} tickFormatter={v=>id==='growth'||id==='margin'?`${Math.round(Number(v)*100)}%`:new Intl.NumberFormat('en',{notation:'compact'}).format(Number(v))}/><Tooltip/>{series[id].map((key,i)=><Line key={key} dataKey={key} stroke={i?'var(--chart-3)':'var(--primary)'} strokeDasharray={i?'4 4':undefined} dot={false} connectNulls isAnimationActive={false}/>)}</LineChart>}</ResponsiveContainer></div></section>;
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
+import { CHART_CATALOG, type ChartId } from "@/lib/vicky/coach";
+export function EngineChart({
+  id,
+  charts,
+  inline = false,
+}: {
+  id: ChartId;
+  charts: Partial<Record<ChartId, unknown[]>>;
+  inline?: boolean;
+}) {
+  const data = charts[id];
+  if (!data?.length) return null;
+  const series: Record<ChartId, string[]> = {
+    mrr: ["actual", "plan", "atRecentPace"],
+    growth: ["growth"],
+    burn: ["operatingLoss", "otherIncome"],
+    margin: ["booked", "withSupport"],
+    customers: ["netNew"],
+    runway: ["months"],
+    deckVsData: ["deck", "data"],
+  };
+  const axis =
+    id === "customers" ? "quarter" : id === "runway" || id === "deckVsData" ? "label" : "month";
+  const bars = ["runway", "customers", "deckVsData"].includes(id);
+  return (
+    <section className="min-w-0">
+      <p className="mb-3 text-sm font-semibold">{CHART_CATALOG[id].title}</p>
+      {inline && <p className="mb-2 text-[10px] text-muted-foreground">From your dashboard</p>}
+      <div className="h-[200px] w-full" role="img" aria-label={CHART_CATALOG[id].title}>
+        <ResponsiveContainer>
+          {bars ? (
+            <BarChart data={data}>
+              <CartesianGrid vertical={false} stroke="var(--border)" />
+              <XAxis dataKey={axis} tick={{ fontSize: 9 }} />
+              <YAxis tick={{ fontSize: 10 }} width={48} />
+              <Tooltip />
+              {series[id].map((key, i) => (
+                <Bar
+                  key={key}
+                  dataKey={key}
+                  fill={i ? "var(--chart-3)" : "var(--primary)"}
+                  isAnimationActive={false}
+                />
+              ))}
+            </BarChart>
+          ) : (
+            <LineChart data={data}>
+              <CartesianGrid vertical={false} stroke="var(--border)" />
+              <XAxis dataKey={axis} minTickGap={35} tick={{ fontSize: 9 }} />
+              <YAxis
+                width={55}
+                tick={{ fontSize: 10 }}
+                tickFormatter={(v) =>
+                  id === "growth" || id === "margin"
+                    ? `${Math.round(Number(v) * 100)}%`
+                    : new Intl.NumberFormat("en", { notation: "compact" }).format(Number(v))
+                }
+              />
+              <Tooltip />
+              {series[id].map((key, i) => (
+                <Line
+                  key={key}
+                  dataKey={key}
+                  stroke={i ? "var(--chart-3)" : "var(--primary)"}
+                  strokeDasharray={i ? "4 4" : undefined}
+                  dot={false}
+                  connectNulls
+                  isAnimationActive={false}
+                />
+              ))}
+            </LineChart>
+          )}
+        </ResponsiveContainer>
+      </div>
+    </section>
+  );
 }

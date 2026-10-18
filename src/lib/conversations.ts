@@ -30,7 +30,7 @@ export const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
   content: z.string(),
   created_at: z.string(),
-  feedback: z.enum(["up","down"]).nullable().optional(),
+  feedback: z.enum(["up", "down"]).nullable().optional(),
   hidden: z.boolean().optional(),
 });
 export const turnSchema = z.object({

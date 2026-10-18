@@ -8,7 +8,12 @@ import { ContextBar } from "./ContextBar";
 import { VickyAvatar } from "./VickyAvatar";
 import { useVickyDashboard } from "@/hooks/use-vicky-dashboard";
 import { chatSuggestions } from "@/lib/vicky/coach";
-import { PromptInput,PromptInputTextarea,PromptInputFooter,PromptInputSubmit } from "@/components/ai-elements/prompt-input";
+import {
+  PromptInput,
+  PromptInputTextarea,
+  PromptInputFooter,
+  PromptInputSubmit,
+} from "@/components/ai-elements/prompt-input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,9 +74,9 @@ function Workspace({
 }) {
   const cache = useQueryClient();
   const dashboard = useVickyDashboard(search);
-  const [questionsOpen,setQuestionsOpen]=useState(false);
-  const [voice,setVoice]=useState(false);
-  const [draft,setDraft]=useState("");
+  const [questionsOpen, setQuestionsOpen] = useState(false);
+  const [voice, setVoice] = useState(false);
+  const [draft, setDraft] = useState("");
   const navigate = useNavigate();
   const chats = useQuery({
     queryKey: ["conversations", founderId],
@@ -127,7 +132,17 @@ function Workspace({
     }
   }
   useEffect(() => {
-    if (!id && (search.prompt || search.question)) { const q=dashboard.data?.brief.questions.find(q=>q.id===search.question);const prompt=search.prompt??(q?search.mode==="simulate"?"Ask me this investor question and wait for my answer: "+q.question:q.question:undefined);if(prompt)void newChat(prompt,search.mode==="simulate"?"simulate":"ask"); }
+    if (!id && (search.prompt || search.question)) {
+      const q = dashboard.data?.brief.questions.find((q) => q.id === search.question);
+      const prompt =
+        search.prompt ??
+        (q
+          ? search.mode === "simulate"
+            ? "Ask me this investor question and wait for my answer: " + q.question
+            : q.question
+          : undefined);
+      if (prompt) void newChat(prompt, search.mode === "simulate" ? "simulate" : "ask");
+    }
   }, [id, search.question, search.prompt, dashboard.data, newChat]);
   async function change(next: Settings) {
     setError("");
@@ -144,12 +159,30 @@ function Workspace({
           search: { ...next, company_id: next.company_id ?? undefined },
           replace: true,
         });
-      } else await navigate({ to: "/practice", search: { ...next, company_id: next.company_id ?? undefined }, replace: true });
+      } else
+        await navigate({
+          to: "/practice",
+          search: { ...next, company_id: next.company_id ?? undefined },
+          replace: true,
+        });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save chat settings.");
     }
   }
-  useEffect(()=>{if(!id||!active.data||busy)return; const saved=active.data.conversation;if(saved.persona!==settings.persona||saved.stage!==settings.stage||saved.mode!==settings.mode)void updateConversation({data:{id,settings}}).then(chat=>cache.setQueryData(["conversation",id],{...active.data,conversation:chat})).catch(e=>setError(e.message));},[id,active.data,settings.persona,settings.stage,settings.mode,busy]);
+  useEffect(() => {
+    if (!id || !active.data || busy) return;
+    const saved = active.data.conversation;
+    if (
+      saved.persona !== settings.persona ||
+      saved.stage !== settings.stage ||
+      saved.mode !== settings.mode
+    )
+      void updateConversation({ data: { id, settings } })
+        .then((chat) =>
+          cache.setQueryData(["conversation", id], { ...active.data, conversation: chat }),
+        )
+        .catch((e) => setError(e.message));
+  }, [id, active.data, settings.persona, settings.stage, settings.mode, busy]);
   async function confirm() {
     if (!dialog) return;
     setPending(true);
@@ -157,7 +190,11 @@ function Workspace({
     try {
       if (dialog.type === "delete") {
         await deleteConversation({ data: { id: dialog.chat.id } });
-        if (id === dialog.chat.id) await navigate({ to: "/practice", search: { ...settings, company_id: settings.company_id ?? undefined } });
+        if (id === dialog.chat.id)
+          await navigate({
+            to: "/practice",
+            search: { ...settings, company_id: settings.company_id ?? undefined },
+          });
       } else {
         const chat = await updateConversation({ data: { id: dialog.chat.id, title } });
         if (chat.id === id)
@@ -216,7 +253,12 @@ function Workspace({
                           <Link
                             to="/practice/$conversationId"
                             params={{ conversationId: chat.id }}
-                            search={{ persona: chat.persona, stage: chat.stage, mode: chat.mode, company_id: chat.company_id ?? undefined }}
+                            search={{
+                              persona: chat.persona,
+                              stage: chat.stage,
+                              mode: chat.mode,
+                              company_id: chat.company_id ?? undefined,
+                            }}
                             onClick={(e) => {
                               if (busy) {
                                 e.preventDefault();
@@ -268,7 +310,6 @@ function Workspace({
           })
         )}
       </div>
-
     </div>
   );
   return (
@@ -288,13 +329,39 @@ function Workspace({
       <main className="flex min-w-0 flex-1 flex-col">
         <div className="border-b border-border px-4 py-4 md:px-8">
           <div className="flex flex-wrap items-center gap-3">
-            <Button size="icon-sm" variant="ghost" aria-label="Open saved chats" className="md:hidden" onClick={()=>setDrawer(true)}><Menu/></Button>
-            <VickyAvatar small/><h1 className="text-base font-semibold">Vicky</h1>
-            <ToggleGroup type="single" value={settings.mode} disabled={busy||pending} onValueChange={mode=>{if(mode==="ask"||mode==="simulate")void change({...settings,mode});}}>
-              <ToggleGroupItem value="ask" aria-label="Ask Vicky" className="text-xs">Ask</ToggleGroupItem><ToggleGroupItem value="simulate" aria-label="Mock meeting" className="text-xs">Mock meeting</ToggleGroupItem>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              aria-label="Open saved chats"
+              className="md:hidden"
+              onClick={() => setDrawer(true)}
+            >
+              <Menu />
+            </Button>
+            <VickyAvatar small />
+            <h1 className="text-base font-semibold">Vicky</h1>
+            <ToggleGroup
+              type="single"
+              value={settings.mode}
+              disabled={busy || pending}
+              onValueChange={(mode) => {
+                if (mode === "ask" || mode === "simulate") void change({ ...settings, mode });
+              }}
+            >
+              <ToggleGroupItem value="ask" aria-label="Ask Vicky" className="text-xs">
+                Ask
+              </ToggleGroupItem>
+              <ToggleGroupItem value="simulate" aria-label="Mock meeting" className="text-xs">
+                Mock meeting
+              </ToggleGroupItem>
             </ToggleGroup>
-            <label className="ml-auto flex items-center gap-2 text-xs"><Switch aria-label="Voice" checked={voice} onCheckedChange={setVoice}/>Voice</label>
-            <Button variant="outline" size="sm" onClick={()=>setQuestionsOpen(true)}>Likely questions</Button>
+            <label className="ml-auto flex items-center gap-2 text-xs">
+              <Switch aria-label="Voice" checked={voice} onCheckedChange={setVoice} />
+              Voice
+            </label>
+            <Button variant="outline" size="sm" onClick={() => setQuestionsOpen(true)}>
+              Likely questions
+            </Button>
           </div>
         </div>
         {error && (
@@ -316,7 +383,13 @@ function Workspace({
               key={id}
               conversation={active.data.conversation}
               initialMessages={active.data.messages}
-              launch={search.prompt ?? (() => { const q=dashboard.data?.brief.questions.find(q=>q.id===search.question); return q?.question; })()}
+              launch={
+                search.prompt ??
+                (() => {
+                  const q = dashboard.data?.brief.questions.find((q) => q.id === search.question);
+                  return q?.question;
+                })()
+              }
               voice={voice}
               dashboard={dashboard.data}
               coach={dashboard.coach}
@@ -325,10 +398,83 @@ function Workspace({
             />
           )
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col"><div className="flex flex-1 flex-col items-center justify-center gap-5 px-5"><VickyAvatar/><div className="flex max-w-xl flex-col gap-2">{chatSuggestions(dashboard.coach?.plan??[]).map(prompt=><Button key={prompt} variant="outline" className="h-auto whitespace-normal py-3 text-left text-xs" disabled={pending} onClick={()=>void newChat(prompt)}>{prompt}</Button>)}</div></div><div className="mx-auto w-full max-w-3xl px-5 pb-5"><PromptInput onSubmit={({text})=>newChat(text)}><PromptInputTextarea aria-label="Message" placeholder="Ask about your numbers…" value={draft} onChange={e=>setDraft(e.target.value)}/><PromptInputFooter className="justify-end"><PromptInputSubmit disabled={!draft.trim()||pending} status={pending?'submitted':'ready'}/></PromptInputFooter></PromptInput></div></div>
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="flex flex-1 flex-col items-center justify-center gap-5 px-5">
+              <VickyAvatar />
+              <div className="flex max-w-xl flex-col gap-2">
+                {chatSuggestions(dashboard.coach?.plan ?? []).map((prompt) => (
+                  <Button
+                    key={prompt}
+                    variant="outline"
+                    className="h-auto whitespace-normal py-3 text-left text-xs"
+                    disabled={pending}
+                    onClick={() => void newChat(prompt)}
+                  >
+                    {prompt}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="mx-auto w-full max-w-3xl px-5 pb-5">
+              <PromptInput onSubmit={({ text }) => newChat(text)}>
+                <PromptInputTextarea
+                  aria-label="Message"
+                  placeholder="Ask about your numbers…"
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                />
+                <PromptInputFooter className="justify-end">
+                  <PromptInputSubmit
+                    disabled={!draft.trim() || pending}
+                    status={pending ? "submitted" : "ready"}
+                  />
+                </PromptInputFooter>
+              </PromptInput>
+            </div>
+          </div>
         )}
       </main>
-      <Sheet open={questionsOpen} onOpenChange={setQuestionsOpen}><SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md"><SheetTitle>Likely questions</SheetTitle><div className="mt-6 divide-y divide-border">{dashboard.data?.brief.questions.map((q,i)=><section key={q.id} className="py-4"><p className="text-xs text-primary">{String(i+1).padStart(2,'0')}</p><h3 className="mt-2 text-sm font-semibold">{q.question}</h3><p className="mt-2 text-xs leading-relaxed text-muted-foreground">{q.whyTheyAsk}</p><div className="mt-3 flex flex-wrap gap-2"><Button size="sm" onClick={()=>{setQuestionsOpen(false);void newChat("Ask me this investor question and wait for my answer: "+q.question,"simulate");}}>Practise this</Button><Button size="sm" variant="outline" onClick={()=>{setQuestionsOpen(false);void newChat("What should I say when the investor asks: "+q.question,"ask");}}>What should I say?</Button></div></section>)}</div></SheetContent></Sheet>
+      <Sheet open={questionsOpen} onOpenChange={setQuestionsOpen}>
+        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+          <SheetTitle>Likely questions</SheetTitle>
+          <div className="mt-6 divide-y divide-border">
+            {dashboard.data?.brief.questions.map((q, i) => (
+              <section key={q.id} className="py-4">
+                <p className="text-xs text-primary">{String(i + 1).padStart(2, "0")}</p>
+                <h3 className="mt-2 text-sm font-semibold">{q.question}</h3>
+                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{q.whyTheyAsk}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setQuestionsOpen(false);
+                      void newChat(
+                        "Ask me this investor question and wait for my answer: " + q.question,
+                        "simulate",
+                      );
+                    }}
+                  >
+                    Practise this
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setQuestionsOpen(false);
+                      void newChat(
+                        "What should I say when the investor asks: " + q.question,
+                        "ask",
+                      );
+                    }}
+                  >
+                    What should I say?
+                  </Button>
+                </div>
+              </section>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
       <Dialog
         open={!!dialog}
         onOpenChange={(open) => {
