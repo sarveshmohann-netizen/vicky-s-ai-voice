@@ -8,6 +8,7 @@ import {
   ArrowUp,
   ClipboardCheck,
   Mic,
+  Info,
   ThumbsUp,
   ThumbsDown,
 } from "lucide-react";
@@ -87,11 +88,13 @@ export function SavedChat({
   launch,
   onBusy,
   voice = false,
+  onSpeaking,
   dashboard,
   coach,
   choice,
 }: {
   voice?: boolean;
+  onSpeaking: (value: boolean) => void;
   dashboard: ReturnType<typeof useVickyDashboard>["data"];
   coach: ReturnType<typeof useVickyDashboard>["coach"];
   choice: z.infer<typeof practiceSearchSchema>;
@@ -114,6 +117,10 @@ export function SavedChat({
   const input = useRef<HTMLTextAreaElement>(null);
   const cache = useQueryClient();
   const speech = useVickyVoice({ onDraft: setDraft, onSend: (text) => void run("send", text) });
+  useEffect(() => {
+    onSpeaking(speech.speaking);
+    return () => onSpeaking(false);
+  }, [speech.speaking, onSpeaking]);
   useEffect(() => {
     if (!voice) speech.stop();
   }, [voice]);
@@ -486,7 +493,7 @@ export function SavedChat({
                 title="Voice input works in Chrome, Edge and Safari"
                 className="text-[10px] text-muted-foreground"
               >
-                Voice input works in Chrome, Edge and Safari
+                <Info className="size-3" />
               </span>
             )}
             {speech.speaking && (

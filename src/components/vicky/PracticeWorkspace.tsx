@@ -56,9 +56,7 @@ export function PracticePage({
       <ContextBar />
       <ClientOnly fallback={<Loading />}>
         <SessionGate>
-          {(founderId) => (
-            <Workspace key={id ?? "new"} founderId={founderId} id={id} search={search} />
-          )}
+          {(founderId) => <Workspace founderId={founderId} id={id} search={search} />}
         </SessionGate>
       </ClientOnly>
     </div>
@@ -77,6 +75,7 @@ function Workspace({
   const dashboard = useVickyDashboard(search);
   const [questionsOpen, setQuestionsOpen] = useState(false);
   const [voice, setVoice] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
   const [draft, setDraft] = useState("");
   const navigate = useNavigate();
   const speech = useVickyVoice({ onDraft: setDraft, onSend: (text) => void newChat(text) });
@@ -340,7 +339,7 @@ function Workspace({
             >
               <Menu />
             </Button>
-            <VickyAvatar small />
+            <VickyAvatar small active={busy || speaking} />
             <h1 className="text-base font-semibold">Vicky</h1>
             <ToggleGroup
               type="single"
@@ -393,6 +392,7 @@ function Workspace({
                 })()
               }
               voice={voice}
+              onSpeaking={setSpeaking}
               dashboard={dashboard.data}
               coach={dashboard.coach}
               choice={search}

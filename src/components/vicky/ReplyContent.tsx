@@ -16,6 +16,7 @@ import { glossary, glossaryMatchers } from "@/lib/vicky/glossary";
 import type { Metric } from "@/lib/vicky/tidewell/metrics";
 import { sourceTags, chatHeadingParagraphs } from "./Markdown";
 import { SourceChip } from "./Sources";
+import { ExternalLink } from "lucide-react";
 import { EngineChart } from "./EngineChart";
 import type { meetingSearchSchema } from "@/lib/vicky-inputs";
 import type { z } from "zod";
@@ -187,7 +188,7 @@ export function ReplyContent({
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary underline"
+                    className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs text-primary"
                   >
                     {children}
                   </a>
