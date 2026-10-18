@@ -1,8 +1,8 @@
 # Tasks
-- [ ] Add private companies, validated uploads and editable company details.
-- [ ] Integrate company dashboards, investor lens, nonempty charts and URL switcher.
-- [ ] Scope chat and grading to company data; render compact source chips and human replies.
-- [ ] Verify upload/edit/switch/chat/grading, privacy and preserved engine tests.
+- [x] Add private companies, validated uploads and editable company details.
+- [x] Integrate company dashboards, investor lens, nonempty charts and URL switcher.
+- [x] Scope chat and grading to company data; render compact source chips and human replies.
+- [x] Verify upload/edit/switch/chat/grading, privacy and preserved engine tests.
 - [x] Add private saved conversations and messages with founder-only access.
 - [x] Build Practice sidebar, dedicated chat URLs, settings, editing, regeneration and in-chat grading.
 - [x] Verify two restored chats, question launch, privacy, edit/regenerate, grading and mobile drawer.
