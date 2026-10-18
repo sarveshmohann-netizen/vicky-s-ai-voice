@@ -234,9 +234,13 @@
   --muted-foreground: oklch(0.82 0.03 250);
   --border: oklch(1 0 0 / 12%);
   --secondary: oklch(1 0 0 / 8%);
+  --secondary-foreground: oklch(0.92 0.03 250);
   --chart-1: oklch(0.78 0.13 240);
   --chart-2: oklch(0.92 0.03 250);
   --chart-3: oklch(0.55 0.08 255);
   --chart-4: oklch(0.7 0.12 225);
+  --success: oklch(0.8 0.15 155);
+  --destructive: oklch(0.74 0.17 25);
+  --input: oklch(1 0 0 / 20%);
 }
 .vicky-line-glow { filter: drop-shadow(0 0 6px color-mix(in oklch, var(--chart-1) 60%, transparent)); }

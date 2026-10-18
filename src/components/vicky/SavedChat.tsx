@@ -65,15 +65,15 @@ function GradeCard({ content }: { content: string }) {
   const parsed = gradeSchema.safeParse(JSON.parse(content.slice(GRADE_PREFIX.length)));
   if (!parsed.success) return null;
   return (
-    <article className="max-w-lg rounded-lg border border-border bg-section p-4">
-      <h3 className="mb-3 text-sm font-semibold">Answer scorecard</h3>
+    <article className="vicky-card-glow max-w-lg rounded-2xl p-5 text-navy">
+      <h3 className="font-heading mb-3 text-base font-bold">Answer scorecard</h3>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {Object.entries(parsed.data.grade).map(([key, value]) => (
           <div key={key}>
-            <p className="text-xs capitalize text-muted-foreground">{key}</p>
-            <p className="text-lg font-semibold">
+            <p className="text-xs capitalize text-navy/75">{key}</p>
+            <p className="font-heading text-2xl font-extrabold">
               {value}
-              <span className="text-xs text-muted-foreground">/4</span>
+              <span className="text-xs font-medium text-navy/75">/4</span>
             </p>
           </div>
         ))}
@@ -350,7 +350,7 @@ export function SavedChat({
                   <MessageContent
                     className={
                       m.role === "user"
-                        ? "group-[.is-user]:bg-primary group-[.is-user]:text-primary-foreground"
+                        ? "group-[.is-user]:rounded-2xl group-[.is-user]:bg-navy group-[.is-user]:text-navy-foreground"
                         : "w-full max-w-[65ch] overflow-visible text-[15px] leading-7"
                     }
                   >
@@ -466,7 +466,10 @@ export function SavedChat({
             {grading ? "Grading…" : "Grade my last answer"}
           </Button>
         )}
-        <PromptInput onSubmit={({ text }) => run("send", text)}>
+        <PromptInput
+          className="[&_[data-slot=input-group]]:rounded-2xl [&_[data-slot=input-group]]:shadow-[var(--shadow-elegant)]"
+          onSubmit={({ text }) => run("send", text)}
+        >
           <PromptInputTextarea
             ref={input}
             aria-label="Message"

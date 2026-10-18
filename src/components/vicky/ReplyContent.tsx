@@ -19,7 +19,7 @@ import { extractCitations } from "@/lib/reply-citations";
 import { sourceDescription } from "@/lib/vicky-sources";
 import { SourceChip } from "./Sources";
 import { ExternalLink } from "lucide-react";
-import { EngineChart } from "./EngineChart";
+import { EngineChart, endDot } from "./EngineChart";
 import { ChartTooltip } from "./ChartTooltip";
 import { formatValue } from "@/lib/chart-format";
 import type { meetingSearchSchema } from "@/lib/vicky-inputs";
@@ -71,8 +71,8 @@ function ScenarioCard({
   const [input, setInput] = useState({ ...base, ...changes });
   const result = runScenario(input);
   return (
-    <article className="my-4 rounded-lg border border-border bg-section p-4">
-      <h3 className="mb-3 text-sm font-semibold">What-if</h3>
+    <article className="on-navy my-4 rounded-2xl border border-border bg-card p-5 text-foreground">
+      <h3 className="font-heading mb-3 text-base font-bold">What-if</h3>
       <div className="grid grid-cols-3 gap-2">
         {(
           [
@@ -125,8 +125,9 @@ function ScenarioCard({
             <Line
               dataKey="mrr"
               stroke="var(--chart-1)"
-              strokeWidth={2.5}
-              dot={false}
+              strokeWidth={3}
+              className="vicky-line-glow"
+              dot={endDot(result.points, "mrr", "var(--chart-1)")}
               isAnimationActive={false}
             />
             <Line
@@ -134,7 +135,7 @@ function ScenarioCard({
               stroke="var(--chart-4)"
               strokeWidth={2}
               strokeDasharray="6 4"
-              dot={false}
+              dot={endDot(result.points, "cash", "var(--chart-4)")}
               isAnimationActive={false}
             />
           </LineChart>

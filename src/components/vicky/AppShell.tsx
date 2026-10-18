@@ -44,25 +44,29 @@ export function AppHeader({ transparent = false }: { transparent?: boolean }) {
   return (
     <header
       className={
-        "sticky top-0 z-20 backdrop-blur " +
-        (transparent ? "bg-transparent" : "border-b border-border bg-card/95")
+        // The see-through header sits on a page's hero and scrolls away with it;
+        // the solid one stays pinned.
+        transparent
+          ? "relative z-20 bg-transparent"
+          : "sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur"
       }
     >
-      <div className="mx-auto grid max-w-7xl grid-cols-[1fr_auto] items-center gap-x-6 gap-y-3 px-5 py-4 md:grid-cols-[1fr_auto_1fr] md:px-8">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-x-6 gap-y-3 px-5 py-4 md:grid-cols-[1fr_auto_1fr] md:px-8">
         <Link
           to="/"
           search={(prev) => meetingSearchSchema.parse(prev)}
           className="flex items-center gap-3"
         >
-          <img src="/brand/june-analytics-logo.png" alt="June Analytics" className="h-7 w-auto" />
+          <img
+            src="/brand/june-analytics-logo-navy.png"
+            alt="June Analytics"
+            className="h-5 w-auto"
+          />
           <span className="font-heading border-l border-navy/20 pl-3 text-lg font-bold text-navy">
             Vicky<span className="text-primary">.</span>
           </span>
         </Link>
-        <nav
-          aria-label="Main"
-          className="order-3 col-span-2 -mx-1 flex max-w-full gap-1 overflow-x-auto md:order-none md:col-span-1"
-        >
+        <nav aria-label="Main" className="flex justify-center gap-1">
           {NAV.map((n) => (
             <Link
               key={n.to}
@@ -76,20 +80,7 @@ export function AppHeader({ transparent = false }: { transparent?: boolean }) {
             </Link>
           ))}
         </nav>
-        <div className="flex justify-end">
-          <Button
-            asChild
-            size="sm"
-            className="rounded-lg bg-navy px-4 text-navy-foreground hover:bg-navy/90"
-          >
-            <Link
-              to="/practice"
-              search={(prev) => ({ ...meetingSearchSchema.parse(prev), mode: "ask" as const })}
-            >
-              Ask Vicky
-            </Link>
-          </Button>
-        </div>
+        <div aria-hidden className="hidden md:block" />
       </div>
     </header>
   );
@@ -118,7 +109,7 @@ export function SessionGate({ children }: { children: (userId: string) => ReactN
   if (session === undefined) return <Loading />;
   if (!session)
     return (
-      <section className="mx-auto max-w-md py-8 text-center">
+      <section className="mx-auto max-w-md px-5 py-8 text-center">
         <LockKeyhole className="mx-auto mb-4 size-7 text-primary" />
         <h2 className="font-heading mb-1 text-2xl font-bold text-navy">
           Sign in to work with Vicky

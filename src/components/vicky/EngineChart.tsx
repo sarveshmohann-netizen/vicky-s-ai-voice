@@ -59,10 +59,10 @@ type Row = Record<string, unknown>;
 
 // A filled dot with a soft halo on the last point of each line, so the eye
 // lands on where the series ends up.
-function endDot(data: Row[], key: string, color: string) {
+export function endDot(data: readonly object[], key: string, color: string) {
   let last = -1;
   data.forEach((r, i) => {
-    if (typeof r[key] === "number") last = i;
+    if (typeof (r as Row)[key] === "number") last = i;
   });
   function EndDot(p: { cx?: number; cy?: number; index?: number }) {
     if (p.index !== last || p.cx == null || p.cy == null) return <g key={p.index} />;
@@ -97,7 +97,7 @@ export function EngineChart({
   const xTick = (v: unknown) => formatAxisLabel(v, false);
 
   return (
-    <section className="min-w-0 rounded-2xl border border-border bg-card p-5 md:p-6">
+    <section className="on-navy min-w-0 rounded-2xl border border-border bg-card p-5 text-foreground shadow-[var(--shadow-elegant)] md:p-6">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="font-heading text-lg font-bold text-foreground">
@@ -215,7 +215,13 @@ export function EngineChart({
                   content={<ChartTooltip kind="months" />}
                   cursor={{ fill: "var(--secondary)" }}
                 />
-                <Bar dataKey="months" radius={[0, 6, 6, 0]} barSize={22} isAnimationActive={false}>
+                <Bar
+                  dataKey="months"
+                  radius={[0, 6, 6, 0]}
+                  barSize={22}
+                  className="vicky-line-glow"
+                  isAnimationActive={false}
+                >
                   {data.map((r, i) => (
                     <Cell key={i} fill={i === data.length - 1 ? PALE : BLUE} />
                   ))}
@@ -255,6 +261,7 @@ export function EngineChart({
                     dataKey={s.key}
                     fill={s.color}
                     radius={[4, 4, 0, 0]}
+                    className="vicky-line-glow"
                     isAnimationActive={false}
                   >
                     {id === "customers" &&
@@ -293,6 +300,7 @@ export function EngineChart({
                     stroke={s.color}
                     strokeWidth={3}
                     strokeDasharray={s.dash}
+                    className="vicky-line-glow"
                     dot={endDot(data, s.key, s.color)}
                     activeDot={{ r: 5, stroke: "var(--card)", strokeWidth: 2 }}
                     connectNulls
@@ -306,7 +314,7 @@ export function EngineChart({
       )}
       {id === "customers" && (
         <p className="mt-3 text-xs text-muted-foreground">
-          Dark bars are actual quarters, light bars are the plan.
+          Bright bars are actual quarters, faded bars are the plan.
         </p>
       )}
     </section>
@@ -355,7 +363,11 @@ function DeckVsData({ rows }: { rows: Row[] }) {
                 <span className="h-2.5 overflow-hidden rounded-full bg-secondary">
                   <span
                     className="block h-full rounded-full"
-                    style={{ width: `${(Math.abs(b.value) / max) * 100}%`, background: b.color }}
+                    style={{
+                      width: `${(Math.abs(b.value) / max) * 100}%`,
+                      background: b.color,
+                      boxShadow: `0 0 8px ${b.color}`,
+                    }}
                   />
                 </span>
                 <span className="w-24 text-right font-semibold tabular-nums">
