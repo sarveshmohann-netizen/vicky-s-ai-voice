@@ -63,7 +63,7 @@ function barFor(id: string, stage: Stage): Bar | null {
   return null;
 }
 
-const METRIC_TOPIC: Record<string, Topic> = {
+export const METRIC_TOPIC: Record<string, Topic> = {
   arr: "growth", growth3m: "growth", growth12m: "growth", netNewArr: "growth",
   grossMarginWithSupport: "margin", grossMarginBooked: "margin",
   logoChurnMonthly12m: "churn", nrr: "retention", grr: "retention", largestCustomerShare: "concentration",

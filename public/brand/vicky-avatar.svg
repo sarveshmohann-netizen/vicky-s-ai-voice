@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Vicky">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4f6bff"/>
+      <stop offset="1" stop-color="#2a2f8f"/>
+    </linearGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b1e4b"/>
+      <stop offset="1" stop-color="#262a66"/>
+    </linearGradient>
+    <linearGradient id="jacket" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#dfe4ff"/>
+    </linearGradient>
+    <clipPath id="round"><circle cx="128" cy="128" r="128"/></clipPath>
+  </defs>
+  <g clip-path="url(#round)">
+    <rect width="256" height="256" fill="url(#bg)"/>
+    <circle cx="200" cy="58" r="70" fill="#ffffff" opacity="0.07"/>
+    <!-- hair behind the shoulders -->
+    <path d="M70 120c0-46 26-74 58-74s58 28 58 74c0 30-6 52-14 66H84c-8-14-14-36-14-66z" fill="url(#hair)"/>
+    <!-- neck -->
+    <path d="M113 148h30v28c0 8-7 14-15 14s-15-6-15-14z" fill="#f1d3c2"/>
+    <!-- jacket -->
+    <path d="M40 256c4-46 30-70 64-76l24 30 24-30c34 6 60 30 64 76z" fill="url(#jacket)"/>
+    <path d="M104 180l24 30-14 46h-12c-4-28-4-54 2-76z" fill="#c9d0ff"/>
+    <path d="M152 180l-24 30 14 46h12c4-28 4-54-2-76z" fill="#c9d0ff"/>
+    <path d="M128 210l-8 46h16z" fill="#4f6bff"/>
+    <!-- face -->
+    <ellipse cx="128" cy="118" rx="36" ry="42" fill="#f6dccd"/>
+    <!-- fringe and bob -->
+    <path d="M88 118C86 76 106 54 132 54c26 0 40 22 36 54-22-6-40-20-50-40-6 22-14 38-30 50z" fill="url(#hair)"/>
+    <path d="M92 108c-6 20-6 50 4 70l10-2c-8-20-8-46-4-62z" fill="url(#hair)"/>
+    <path d="M164 108c6 20 6 50-4 70l-10-2c8-20 8-46 4-62z" fill="url(#hair)"/>
+    <!-- small earrings, a quiet accent -->
+    <circle cx="93" cy="134" r="3" fill="#ffd166"/>
+    <circle cx="163" cy="134" r="3" fill="#ffd166"/>
+  </g>
+</svg>
