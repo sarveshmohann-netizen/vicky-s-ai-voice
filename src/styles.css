@@ -53,6 +53,9 @@
   --color-chart-5: var(--chart-5);
   --font-sans: var(--app-sans);
   --font-mono: var(--app-mono);
+  --font-display: var(--app-display);
+  --color-section: var(--section);
+  --color-section-foreground: var(--section-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
@@ -71,21 +74,25 @@
 
 :root {
   --radius: 0.5rem;
-  --app-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --app-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --app-display: "Lora", Georgia, serif;
   --app-mono: "IBM Plex Mono", ui-monospace, monospace;
-  --background: oklch(0.985 0.004 240);
-  --foreground: oklch(0.22 0.04 255);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.22 0.035 255);
+  --section: oklch(0.965 0.018 255);
+  --section-foreground: oklch(0.27 0.07 255);
+  --shadow-elegant: 0 8px 28px oklch(0.3 0.08 255 / 7%);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.22 0.04 255);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.22 0.04 255);
-  --primary: oklch(0.32 0.08 255);
+  --primary: oklch(0.54 0.245 264);
   --primary-foreground: oklch(0.98 0.005 240);
-  --secondary: oklch(0.955 0.01 240);
+  --secondary: oklch(0.94 0.03 255);
   --secondary-foreground: oklch(0.28 0.05 255);
-  --muted: oklch(0.955 0.008 240);
+  --muted: oklch(0.975 0.01 255);
   --muted-foreground: oklch(0.5 0.03 255);
-  --accent: oklch(0.6 0.11 185);
+  --accent: oklch(0.5 0.21 264);
   --accent-foreground: oklch(0.99 0 0);
   --destructive: oklch(0.56 0.2 27);
   --destructive-foreground: oklch(0.99 0 0);
@@ -97,8 +104,8 @@
   --info-foreground: oklch(0.99 0 0);
   --border: oklch(0.91 0.01 245);
   --input: oklch(0.89 0.012 245);
-  --ring: oklch(0.6 0.11 185);
-  --chart-1: oklch(0.6 0.11 185);
+  --ring: oklch(0.54 0.245 264);
+  --chart-1: oklch(0.54 0.245 264);
   --chart-2: oklch(0.32 0.08 255);
   --chart-3: oklch(0.75 0.15 75);
   --chart-4: oklch(0.55 0.15 250);
@@ -114,6 +121,8 @@
 }
 
 .dark {
+  --section: oklch(0.24 0.045 255);
+  --section-foreground: oklch(0.94 0.02 255);
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
   --card: oklch(0.208 0.042 265.755);
@@ -158,4 +167,33 @@
     color: var(--color-foreground);
     font-family: var(--app-sans);
   }
+  * { letter-spacing: 0; }
+  h1, h2, h3 { text-wrap: balance; }
+  button, a, summary { -webkit-tap-highlight-color: transparent; }
+}
+
+.vicky-intro {
+  background: var(--section);
+  border-bottom: 1px solid var(--border);
+  padding: 54px 24px 48px;
+  text-align: center;
+}
+.vicky-intro h1 { font-family: var(--app-display); font-weight: 500; line-height: 1.15; }
+.vicky-content { padding-top: 32px; padding-bottom: 64px; }
+.metric-card { background: var(--section); transition: transform 180ms ease, box-shadow 180ms ease; }
+.metric-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-elegant); }
+.analysis-section { margin-top: 64px; margin-bottom: 64px; }
+.analysis-section > h2 { text-align: center; font-size: 28px; font-weight: 700; }
+.analysis-section > p { text-align: center; margin-bottom: 28px; }
+.readiness-overview { border-bottom: 1px solid var(--border); }
+.readiness-summary { background: var(--section); color: var(--section-foreground); }
+.investor-card { min-height: 240px; background: var(--section); }
+@media (max-width: 640px) {
+  .vicky-intro { padding: 36px 20px 32px; }
+  .vicky-intro h1 { font-size: 32px; }
+  .analysis-section { margin-top: 44px; margin-bottom: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .metric-card { transition: none; }
+  .metric-card:hover { transform: none; }
 }

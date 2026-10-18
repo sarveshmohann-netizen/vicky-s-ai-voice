@@ -9,3 +9,5 @@
 - [x] Create Gemini-powered vickyReport, streaming vickyChat, and vickyGrade using the engine’s five personas.
 - [x] Verify founder access, grade persistence, malformed-grade retry, streaming, and engine tests.
 - [x] Four-screen Vicky app (Analyze, Ask, Prepare, Simulate) with June Analytics branding
+- [x] Combine uploaded reference layouts with blue-and-white colours and reference-inspired fonts.
+- [x] Verify restyled navigation and signed-in screens at desktop and narrow widths.

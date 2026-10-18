@@ -44,12 +44,12 @@ function QuestionCard({ n, question, founderId }: { n: number; question: Questio
     onSuccess: r => { if (!('error' in r)) void qc.invalidateQueries({ queryKey: ['analysis'] }); },
   });
   const r = grade.data;
-  return <article className="rounded-xl border border-border bg-card">
-    <div className="p-6">
+  return <article className="rounded-lg border border-border bg-card">
+    <div className="p-6 md:p-8">
       <p className="font-mono text-xs text-accent">Q{n}</p>
       <h2 className="mt-1 text-lg font-semibold">{question.question}</h2>
       <p className="mt-2 text-sm text-muted-foreground"><span className="font-medium text-foreground">Why investors ask: </span>{question.testing}</p>
-      <Textarea value={answer} onChange={e => setAnswer(e.target.value)} rows={5} className="mt-4" placeholder="Draft your answer, using Tidewell’s numbers…" aria-label={`Answer to question ${n}`} />
+      <Textarea value={answer} onChange={e => setAnswer(e.target.value)} rows={5} className="mt-5 bg-section" placeholder="Draft your answer, using Tidewell’s numbers…" aria-label={`Answer to question ${n}`} />
       <div className="mt-3 flex justify-end"><Button onClick={() => grade.mutate()} disabled={!answer.trim() || grade.isPending}>{grade.isPending ? 'Vicky is grading…' : r ? 'Grade again' : 'Grade my answer'}</Button></div>
       {grade.isError && <p role="alert" className="mt-3 text-sm text-destructive">{grade.error.message}</p>}
       {r && 'error' in r && <p role="alert" className="mt-3 text-sm text-destructive">{r.error}</p>}
