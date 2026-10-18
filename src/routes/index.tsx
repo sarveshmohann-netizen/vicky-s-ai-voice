@@ -41,7 +41,7 @@ const VERDICT_STYLE: Record<Verdict, string> = {
 };
 
 function Section({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
-  return <section className="mb-12"><h2 className="text-xl font-semibold tracking-tight">{title}</h2>{sub && <p className="mb-4 mt-1 text-sm text-muted-foreground">{sub}</p>}<div className={sub ? '' : 'mt-4'}>{children}</div></section>;
+  return <section className="analysis-section"><h2>{title}</h2>{sub && <p className="mt-2 text-sm text-muted-foreground">{sub}</p>}<div className={sub ? '' : 'mt-6'}>{children}</div></section>;
 }
 
 function Analysis({ founderId }: { founderId: string }) {
@@ -55,9 +55,9 @@ function Analysis({ founderId }: { founderId: string }) {
     <Section title="Key metrics" sub="Hover a card for how it was calculated and where the number comes from.">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {metrics.map(m => <Tooltip key={m.id}><TooltipTrigger asChild>
-          <div tabIndex={0} className="cursor-help rounded-lg border border-border bg-card p-4 outline-none transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring">
+          <div tabIndex={0} className="metric-card min-h-40 cursor-help rounded-lg border border-border p-5 outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <div className="mb-3 flex items-start justify-between gap-2"><p className="text-xs leading-snug text-muted-foreground">{m.label}</p><Info className="size-3.5 shrink-0 text-muted-foreground" /></div>
-            <p className="font-mono text-2xl font-semibold tracking-tight">{formatMetric(m)}</p>
+            <p className="text-2xl font-bold tabular-nums">{formatMetric(m)}</p>
             <Badge variant="outline" className={'mt-3 text-[10px] uppercase tracking-wider ' + (m.basis === 'historical' ? 'border-accent text-accent' : 'border-info text-info')}>{m.basis === 'historical' ? 'Historical' : 'Forecast'}</Badge>
           </div>
         </TooltipTrigger><TooltipContent className="max-w-xs space-y-1.5 text-xs"><p><span className="font-semibold">Calculation:</span> {m.calculation}</p><p><span className="font-semibold">Source:</span> {m.source}</p></TooltipContent></Tooltip>)}
@@ -95,13 +95,13 @@ function Analysis({ founderId }: { founderId: string }) {
 }
 
 function Readiness({ r }: { r: Awaited<ReturnType<typeof getTidewellAnalysis>>['readiness'] }) {
-  return <section className="mb-12 overflow-hidden rounded-xl border border-border bg-card">
-    <div className="grid gap-6 bg-primary p-6 text-primary-foreground md:grid-cols-[auto_1fr] md:p-8">
+  return <section className="readiness-overview mb-12">
+    <div className="readiness-summary grid gap-8 p-6 md:grid-cols-[220px_1fr] md:p-8">
       <div><p className="text-xs uppercase tracking-[0.18em] opacity-70">Readiness score</p>
-        <p className="font-mono text-6xl font-semibold">{r.score}<span className="text-2xl opacity-60">/100</span></p>
+        <p className="mt-2 text-6xl font-bold text-primary">{r.score}<span className="text-2xl text-muted-foreground">/100</span></p>
         <p className="mt-1 text-lg font-medium">{r.band}</p></div>
       <div className="self-end"><p className="mb-2 text-sm opacity-80">Coverage: {Math.round(r.coverage * 100)}% of the 100 points assessed so far</p>
-        <Progress value={r.coverage * 100} className="h-2 bg-primary-foreground/20 [&>div]:bg-accent" />
+        <Progress value={r.coverage * 100} className="h-2 bg-primary/10 [&>div]:bg-primary" />
         {r.topActions.length > 0 && <ol className="mt-4 list-decimal space-y-1 pl-5 text-sm opacity-90">{r.topActions.map(t => <li key={t}>{t}</li>)}</ol>}</div>
     </div>
     <div className="grid divide-y divide-border md:grid-cols-2 md:divide-x md:divide-y-0 lg:grid-cols-3">{r.components.map(c => <div key={c.id} className="border-border p-5 [&:nth-child(n+3)]:md:border-t lg:[&:nth-child(n+3)]:border-t-0 lg:[&:nth-child(n+4)]:border-t">

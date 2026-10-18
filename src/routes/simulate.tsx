@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, BriefcaseBusiness } from 'lucide-react';
 import { AppShell } from '@/components/vicky/AppShell';
 import { Chat } from '@/components/vicky/Chat';
 import { Button } from '@/components/ui/button';
@@ -23,13 +23,14 @@ export const Route = createFileRoute('/simulate')({
 function Simulate({ founderId }: { founderId: string }) {
   const [persona, setPersona] = useState<PersonaId | null>(null);
   if (!persona) return <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-    {Object.values(PERSONAS).map(p => <button key={p.id} onClick={() => setPersona(p.id)}
-      className="flex flex-col rounded-xl border border-border bg-card p-5 text-left transition hover:border-accent hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-      <h2 className="font-semibold">{p.name}</h2>
+    {Object.values(PERSONAS).map(p => <Button variant="outline" key={p.id} onClick={() => setPersona(p.id)}
+      className="investor-card group h-auto items-stretch justify-start whitespace-normal rounded-lg border-border p-6 text-left hover:border-primary hover:bg-secondary hover:text-foreground">
+      <span className="flex w-full flex-col"><span className="mb-5 flex items-center justify-between text-primary"><BriefcaseBusiness className="size-6" /><ArrowUpRight className="size-5 transition-transform group-hover:translate-x-1 motion-reduce:transform-none" /></span>
+      <span className="text-lg font-bold">{p.name}</span>
       <p className="mt-1 font-mono text-sm text-accent">{p.cheque}</p>
       <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Says no when</p>
-      <p className="mt-1 text-sm">{p.saysNoWhen}</p>
-    </button>)}
+      <span className="mt-1 text-sm font-normal leading-relaxed">{p.saysNoWhen}</span></span>
+    </Button>)}
   </div>;
   const p = PERSONAS[persona];
   return <div>

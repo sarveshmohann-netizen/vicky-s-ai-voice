@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Application rules
+- Share the Vicky header and global presentation tokens across content screens so visual updates preserve consistent navigation without changing engine logic.
 - Store application data through the generated browser client or authenticated server-function context client with database-enforced access policies; role assignments live in a protected role table to prevent self-escalation.
 - Keep the lessons page public with inline sign-in and a client-only administrator workspace; this preserves OAuth callbacks while enforcing write permissions in the database.
 - Keep UI topic normalization outside the tested Vicky engine; organisers' calculations and data must not be duplicated.

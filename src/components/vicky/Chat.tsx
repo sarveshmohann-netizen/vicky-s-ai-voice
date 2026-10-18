@@ -31,7 +31,8 @@ export function Chat({ founderId, mode, persona, placeholder, starter, empty }: 
     const ctrl = new AbortController(); abort.current = ctrl;
     try {
       const res = await startVickyChat({ founder_id: founderId, mode, ...(persona ? { persona } : {}), messages: next }, ctrl.signal);
-      const reader = res.body!.getReader();
+      if (!res.body) throw new Error('Vicky could not start a reply. Please try again.');
+      const reader = res.body.getReader();
       const dec = new TextDecoder();
       let buf = '', out = '';
       for (;;) {
@@ -56,9 +57,10 @@ export function Chat({ founderId, mode, persona, placeholder, starter, empty }: 
 
   function submit(e: FormEvent) { e.preventDefault(); void send(draft); }
 
-  return <div className="flex min-h-[60vh] flex-col rounded-xl border border-border bg-card">
+  return <div className="flex min-h-[60vh] flex-col rounded-lg border border-border bg-card">
     <div className="flex-1 space-y-6 overflow-y-auto p-5 md:p-7" aria-live="polite">
-      {messages.length === 0 && <div className="py-6">
+      {messages.length === 0 && <div className="mx-auto max-w-lg py-12 text-center">
+        <img src="/brand/june-analytics-mark.png" alt="" className="mx-auto mb-6 size-12 rounded-lg border border-border bg-section p-2" />
         {empty}
         {starter && <Button className="mt-4" onClick={() => void send(starter)}>{mode === 'simulate' ? 'Start the meeting' : starter}</Button>}
       </div>}
