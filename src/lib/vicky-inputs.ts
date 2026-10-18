@@ -10,6 +10,7 @@ export const questionsInput = founderInput.extend({ persona: personaSchema.optio
 export const meetingInput = founderInput.extend({ persona: personaSchema, stage: stageSchema });
 export const chatInput = founderInput.extend({
   company_id: z.string().uuid().nullable().optional(),
+  clarification: z.boolean().optional(),
   conversation_id: z.string().uuid().optional(), action: z.enum(['send','edit','regenerate']).optional(), message_id: z.string().uuid().optional(),
   mode: z.enum(['ask', 'simulate']), persona: personaSchema.optional(), stage: stageSchema.default('seed'),
   messages: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().min(1).max(20000) })).min(1).max(100),

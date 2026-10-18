@@ -4,7 +4,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Menu, Plus, MoreHorizontal, Pencil, Trash2, MessageSquare } from "lucide-react";
 import { AppHeader, SessionGate, Loading } from "./AppShell";
 import { SavedChat } from "./SavedChat";
-import { MeetingPickers } from "./MeetingPickers";
+import { ContextBar } from "./ContextBar";
+import { VickyAvatar } from "./VickyAvatar";
+import { useVickyDashboard } from "@/hooks/use-vicky-dashboard";
+import { chatSuggestions } from "@/lib/vicky/coach";
+import { PromptInput,PromptInputTextarea,PromptInputFooter,PromptInputSubmit } from "@/components/ai-elements/prompt-input";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -29,7 +34,7 @@ import {
   type Settings,
   type practiceSearchSchema,
 } from "@/lib/conversations";
-import { QUESTIONS } from "@/lib/vicky/knowledge";
+
 import type { z } from "zod";
 
 export function PracticePage({
@@ -42,6 +47,7 @@ export function PracticePage({
   return (
     <div className="flex h-dvh flex-col bg-background text-foreground">
       <AppHeader />
+      <ContextBar />
       <ClientOnly fallback={<Loading />}>
         <SessionGate>
           {(founderId) => (
@@ -62,6 +68,10 @@ function Workspace({
   search: z.infer<typeof practiceSearchSchema>;
 }) {
   const cache = useQueryClient();
+  const dashboard = useVickyDashboard(search);
+  const [questionsOpen,setQuestionsOpen]=useState(false);
+  const [voice,setVoice]=useState(false);
+  const [draft,setDraft]=useState("");
   const navigate = useNavigate();
   const chats = useQuery({
     queryKey: ["conversations", founderId],
@@ -81,20 +91,20 @@ function Workspace({
   );
   const [title, setTitle] = useState("");
   const opening = useRef(false);
-  const settings: Settings = active.data?.conversation ?? {
+  const settings: Settings = {
     company_id: search.company_id ?? null,
     persona: search.persona,
     stage: search.stage,
     mode: search.mode === "simulate" ? "simulate" : "ask",
   };
-  async function newChat(question?: string) {
+  async function newChat(prompt?: string, mode = settings.mode) {
     if (pending || opening.current || busy) return;
     opening.current = true;
     setPending(true);
     setError("");
     try {
       const chat = await createConversation({
-        data: { ...settings, ...(question ? { mode: "ask" as const } : {}) },
+        data: { ...settings, mode },
       });
       await cache.invalidateQueries({ queryKey: ["conversations"] });
       setDrawer(false);
@@ -106,7 +116,7 @@ function Workspace({
           stage: chat.stage,
           mode: chat.mode,
           company_id: chat.company_id ?? undefined,
-          ...(question ? { question } : {}),
+          ...(prompt ? { prompt } : {}),
         },
       });
     } catch (e) {
@@ -117,8 +127,8 @@ function Workspace({
     }
   }
   useEffect(() => {
-    if (!id && search.question) void newChat(search.question);
-  }, [id, search.question, newChat]);
+    if (!id && (search.prompt || search.question)) { const q=dashboard.data?.brief.questions.find(q=>q.id===search.question);const prompt=search.prompt??(q?search.mode==="simulate"?"Ask me this investor question and wait for my answer: "+q.question:q.question:undefined);if(prompt)void newChat(prompt,search.mode==="simulate"?"simulate":"ask"); }
+  }, [id, search.question, search.prompt, dashboard.data, newChat]);
   async function change(next: Settings) {
     setError("");
     try {
@@ -139,6 +149,7 @@ function Workspace({
       setError(e instanceof Error ? e.message : "Could not save chat settings.");
     }
   }
+  useEffect(()=>{if(!id||!active.data||busy)return; const saved=active.data.conversation;if(saved.persona!==settings.persona||saved.stage!==settings.stage||saved.mode!==settings.mode)void updateConversation({data:{id,settings}}).then(chat=>cache.setQueryData(["conversation",id],{...active.data,conversation:chat})).catch(e=>setError(e.message));},[id,active.data,settings.persona,settings.stage,settings.mode,busy]);
   async function confirm() {
     if (!dialog) return;
     setPending(true);
@@ -257,7 +268,7 @@ function Workspace({
           })
         )}
       </div>
-      <p className="px-2 text-xs text-muted-foreground">Investor practice</p>
+
     </div>
   );
   return (
@@ -276,45 +287,15 @@ function Workspace({
       </Sheet>
       <main className="flex min-w-0 flex-1 flex-col">
         <div className="border-b border-border px-4 py-4 md:px-8">
-          <div className="mb-4 flex items-center gap-3">
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              aria-label="Open saved chats"
-              className="md:hidden"
-              onClick={() => setDrawer(true)}
-            >
-              <Menu />
-            </Button>
-            <h1 className="truncate font-sans text-base font-semibold">
-              {active.data?.conversation.title ?? "New chat"}
-            </h1>
-          </div>
-          <fieldset
-            disabled={busy || pending}
-            className="min-w-0 disabled:opacity-60 [&>div]:mb-3 [&>div>div:first-child]:sm:w-72"
-          >
-            <MeetingPickers
-              persona={settings.persona}
-              stage={settings.stage}
-              onChange={(choice) => void change({ ...settings, ...choice })}
-            />
-            <ToggleGroup
-              type="single"
-              value={settings.mode}
-              onValueChange={(mode) => {
-                if (mode === "ask" || mode === "simulate") void change({ ...settings, mode });
-              }}
-              className="justify-start"
-            >
-              <ToggleGroupItem value="ask" aria-label="Ask Vicky" className="text-xs">
-                Ask Vicky
-              </ToggleGroupItem>
-              <ToggleGroupItem value="simulate" aria-label="Mock meeting" className="text-xs">
-                Mock meeting
-              </ToggleGroupItem>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button size="icon-sm" variant="ghost" aria-label="Open saved chats" className="md:hidden" onClick={()=>setDrawer(true)}><Menu/></Button>
+            <VickyAvatar small/><h1 className="text-base font-semibold">Vicky</h1>
+            <ToggleGroup type="single" value={settings.mode} disabled={busy||pending} onValueChange={mode=>{if(mode==="ask"||mode==="simulate")void change({...settings,mode});}}>
+              <ToggleGroupItem value="ask" aria-label="Ask Vicky" className="text-xs">Ask</ToggleGroupItem><ToggleGroupItem value="simulate" aria-label="Mock meeting" className="text-xs">Mock meeting</ToggleGroupItem>
             </ToggleGroup>
-          </fieldset>
+            <label className="ml-auto flex items-center gap-2 text-xs"><Switch aria-label="Voice" checked={voice} onCheckedChange={setVoice}/>Voice</label>
+            <Button variant="outline" size="sm" onClick={()=>setQuestionsOpen(true)}>Likely questions</Button>
+          </div>
         </div>
         {error && (
           <p role="alert" className="px-5 py-2 text-sm text-destructive">
@@ -335,21 +316,19 @@ function Workspace({
               key={id}
               conversation={active.data.conversation}
               initialMessages={active.data.messages}
-              launch={(() => { const q=QUESTIONS.find(q=>q.id===search.question); return active.data.conversation.company_id ? q?.genericQuestion ?? q?.question : q?.question; })()}
+              launch={search.prompt ?? (() => { const q=dashboard.data?.brief.questions.find(q=>q.id===search.question); return q?.question; })()}
+              voice={voice}
+              dashboard={dashboard.data}
+              coach={dashboard.coach}
+              choice={search}
               onBusy={setBusy}
             />
           )
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-5 p-8">
-            <img src="/brand/june-analytics-mark.png" alt="" className="size-12" />
-            <h2 className="text-3xl">What’s on your mind?</h2>
-            <Button disabled={pending} onClick={() => void newChat()}>
-              <Plus />
-              New chat
-            </Button>
-          </div>
+          <div className="flex min-h-0 flex-1 flex-col"><div className="flex flex-1 flex-col items-center justify-center gap-5 px-5"><VickyAvatar/><div className="flex max-w-xl flex-col gap-2">{chatSuggestions(dashboard.coach?.plan??[]).map(prompt=><Button key={prompt} variant="outline" className="h-auto whitespace-normal py-3 text-left text-xs" disabled={pending} onClick={()=>void newChat(prompt)}>{prompt}</Button>)}</div></div><div className="mx-auto w-full max-w-3xl px-5 pb-5"><PromptInput onSubmit={({text})=>newChat(text)}><PromptInputTextarea aria-label="Message" placeholder="Ask about your numbers…" value={draft} onChange={e=>setDraft(e.target.value)}/><PromptInputFooter className="justify-end"><PromptInputSubmit disabled={!draft.trim()||pending} status={pending?'submitted':'ready'}/></PromptInputFooter></PromptInput></div></div>
         )}
       </main>
+      <Sheet open={questionsOpen} onOpenChange={setQuestionsOpen}><SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md"><SheetTitle>Likely questions</SheetTitle><div className="mt-6 divide-y divide-border">{dashboard.data?.brief.questions.map((q,i)=><section key={q.id} className="py-4"><p className="text-xs text-primary">{String(i+1).padStart(2,'0')}</p><h3 className="mt-2 text-sm font-semibold">{q.question}</h3><p className="mt-2 text-xs leading-relaxed text-muted-foreground">{q.whyTheyAsk}</p><div className="mt-3 flex flex-wrap gap-2"><Button size="sm" onClick={()=>{setQuestionsOpen(false);void newChat("Ask me this investor question and wait for my answer: "+q.question,"simulate");}}>Practise this</Button><Button size="sm" variant="outline" onClick={()=>{setQuestionsOpen(false);void newChat("What should I say when the investor asks: "+q.question,"ask");}}>What should I say?</Button></div></section>)}</div></SheetContent></Sheet>
       <Dialog
         open={!!dialog}
         onOpenChange={(open) => {

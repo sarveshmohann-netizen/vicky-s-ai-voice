@@ -8,6 +8,9 @@ import { createVickyAI, safeAIError, VickyAIError } from './vicky-ai.server';
 import { withLovableAiGatewayRunIdHeader } from './ai/run-id.server';
 import { turnSchema, isGradeMessage } from './conversations';
 import { loadCompanyContext } from './companies.server';
+import { meetingBrief } from './vicky/tidewell/brief';
+import { companyBrief } from './vicky/company/brief';
+import { dashboardCoach, CLARIFICATION } from './vicky-dashboard';
 
 export async function handleVickyChat(request: Request) {
   const token = request.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
@@ -34,14 +37,21 @@ export async function handleVickyChat(request: Request) {
         ...(last ? { p_content: last.content } : {}),
       });
       if (prepareError) return Response.json({ error: 'Could not save this message. Reload the chat and try again.' }, { status: 409 });
+      if (input.clarification && last?.content === CLARIFICATION) {
+        const hidden = await client.rpc('vicky_hide_clarification', {p_conversation:input.conversation_id});
+        if(hidden.error) throw new Error('Could not save clarification.');
+      }
       const turn = turnSchema.parse(prepared);
       version = turn.conversation.updated_at;
       input = { ...input, company_id:turn.conversation.company_id ?? null, mode:turn.conversation.mode, persona:turn.conversation.persona, stage:turn.conversation.stage,
-        messages:turn.messages.filter(m => !isGradeMessage(m)).slice(-100).map(({ role,content }) => ({ role,content })) };
+        messages:turn.messages.filter(m => !isGradeMessage(m)).map(({ role,content }) => ({ role,content })) };
     }
     const context = input.company_id ? await loadCompanyContext(client, id, input.company_id, true) : await loadFounderData(client, id, true);
     const analysis = 'knowledge' in context ? context.knowledge : toKnowledgeAnalysis(context.analysis);
-    const system = buildSystemPrompt({ mode: input.mode, stage: input.stage, ...(input.persona ? { persona: input.persona } : {}), analysis, history:context.history, lessons:context.lessons, ...(input.company_id ? { workedExamples: false } : {}) });
+    const persona = input.persona ?? 'lead-seed';
+    const brief = 'profile' in context ? companyBrief(context.analysis,context.profile,persona,input.stage,context.history) : meetingBrief(persona,input.stage,context.history,context.analysis);
+    const coach = dashboardCoach(context.analysis,brief,'profile' in context ? context.profile : undefined);
+    const system = buildSystemPrompt({ ...(input.mode === 'ask' ? {coach} : {}), mode: input.mode, stage: input.stage, ...(input.persona ? { persona: input.persona } : {}), analysis, history:context.history, lessons:context.lessons, ...(input.company_id ? { workedExamples: false } : {}) });
     const ai = createVickyAI();
     const result = ai.stream(system, input.messages, request.signal);
     // Read the first event before sending headers, so upstream denials retain status.
