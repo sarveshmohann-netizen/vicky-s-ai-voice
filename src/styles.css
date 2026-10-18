@@ -188,6 +188,8 @@
 .readiness-overview { border-bottom: 1px solid var(--border); }
 .readiness-summary { background: var(--section); color: var(--section-foreground); }
 .investor-card { min-height: 240px; background: var(--section); }
+.chart-label { fill: var(--foreground); font-size: 10px; }
+.readiness-ring-label { fill: var(--primary); font-family: var(--app-sans); font-size: 18px; font-weight: 700; }
 @media (max-width: 640px) {
   .vicky-intro { padding: 36px 20px 32px; }
   .vicky-intro h1 { font-size: 32px; }

@@ -1,17 +1,16 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { ClientOnly, Link } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Loader2, LockKeyhole, LogOut, ArrowUpRight } from 'lucide-react';
+import { Loader2, LockKeyhole, LogOut } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { lovable } from '@/integrations/lovable';
 import { supabase } from '@/integrations/supabase/client';
+import { meetingSearchSchema } from '@/lib/vicky-inputs';
 
 const NAV = [
-  { to: '/', label: 'Analyze the Numbers' },
-  { to: '/ask', label: 'Ask Vicky' },
-  { to: '/prepare', label: 'Prepare the Founder' },
-  { to: '/simulate', label: 'Simulate the Pitch' },
+  { to: '/', label: 'Meeting prep' },
+  { to: '/practice', label: 'Practice' },
 ] as const;
 
 export function AppShell({ title, eyebrow, intro, children }: { title: string; eyebrow: string; intro: string; children: (userId: string) => ReactNode }) {
@@ -31,16 +30,15 @@ export function AppShell({ title, eyebrow, intro, children }: { title: string; e
 export function AppHeader() {
   return <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 py-4 md:px-8">
-        <Link to="/" className="flex items-center gap-3">
+        <Link to="/" search={prev => meetingSearchSchema.parse(prev)} className="flex items-center gap-3">
           <img src="/brand/june-analytics-logo.png" alt="June Analytics" className="h-8 w-auto" />
           <span className="border-l border-border pl-3 text-lg font-bold">Vicky<span className="text-primary">.</span></span>
         </Link>
         <nav aria-label="Main" className="-mx-1 flex max-w-full gap-1 overflow-x-auto">
-          {NAV.map(n => <Link key={n.to} to={n.to} activeOptions={{ exact: true }}
+          {NAV.map(n => <Link key={n.to} to={n.to} search={prev => ({ ...meetingSearchSchema.parse(prev), mode: 'question' as const })} activeOptions={{ exact: true, includeSearch: false }}
             className="whitespace-nowrap rounded-md px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
             activeProps={{ className: 'bg-secondary !text-primary' }}>{n.label}</Link>)}
         </nav>
-        <Button asChild size="sm" className="hidden xl:inline-flex"><Link to="/prepare">Get pitch-ready<ArrowUpRight /></Link></Button>
       </div>
     </header>;
 }

@@ -1,124 +1,46 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { ChevronDown, FileText, Info } from 'lucide-react';
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { AlertTriangle, ArrowUpRight } from 'lucide-react';
 import { AppShell, Loading } from '@/components/vicky/AppShell';
-import { Markdown } from '@/components/vicky/Markdown';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { getTidewellAnalysis, vickyReport } from '@/lib/vicky.functions';
-import { formatMetric, type Metric } from '@/lib/vicky/tidewell/metrics';
-import type { ClaimStatus } from '@/lib/vicky/tidewell/claims';
-import type { Verdict } from '@/lib/vicky/tidewell/audit';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { MeetingPickers } from '@/components/vicky/MeetingPickers';
+import { MeetingCharts } from '@/components/vicky/MeetingCharts';
+import { MetricsDialog } from '@/components/vicky/MetricsDialog';
+import { Sources, SourceText } from '@/components/vicky/Sources';
+import { meetingSearchSchema } from '@/lib/vicky-inputs';
+import { getMeetingBrief, getTidewellAnalysis } from '@/lib/vicky.functions';
 
 export const Route = createFileRoute('/')({
+  validateSearch: input => meetingSearchSchema.parse(input),
   head: () => ({ meta: [
-    { title: 'Analyze the Numbers · Vicky by June Analytics' },
-    { name: 'description', content: 'Tidewell’s key metrics, deck claims checked, forecast assumptions audited and fundraising readiness score.' },
-    { property: 'og:title', content: 'Analyze the Numbers · Vicky by June Analytics' },
-    { property: 'og:description', content: 'Tidewell’s key metrics, deck claims and readiness score, computed from the data pack.' },
-    { property: 'og:type', content: 'website' },
-    { name: 'twitter:card', content: 'summary' },
+    { title: 'Meeting prep · Vicky by June Analytics' },
+    { name: 'description', content: 'An investor-specific Tidewell meeting brief: chart the plan, tighten the story, and rehearse ten questions.' },
+    { property: 'og:title', content: 'Meeting prep · Vicky by June Analytics' },
+    { property: 'og:description', content: 'Tidewell’s numbers, investor priorities and ten questions to prepare before your pitch.' },
+    { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' },
   ] }),
-  component: () => <AppShell eyebrow="Tidewell · Seed round" title="Analyze the Numbers" intro="Every figure is computed from Tidewell’s data pack. Vicky explains them; she never calculates them.">
-    {id => <Analysis founderId={id} />}
-  </AppShell>,
+  component: () => <AppShell eyebrow="Tidewell · Your next meeting" title="Meeting prep" intro="A clearer story. A stronger meeting.">{id => <MeetingPrep founderId={id} />}</AppShell>,
 });
 
-const KEY_METRICS = ['arr', 'growth12m', 'growth3m', 'grossMarginBooked', 'grossMarginWithSupport', 'cacFullyLoaded', 'cacPaybackMonths', 'monthlyBurn', 'runwayToday', 'burnMultiple'];
-
-const STATUS_STYLE: Record<ClaimStatus, string> = {
-  Fix: 'bg-destructive text-destructive-foreground',
-  Reword: 'bg-warning text-warning-foreground',
-  'Remove or source': 'bg-muted-foreground text-background',
-  'Show as upside': 'bg-info text-info-foreground',
-  Holds: 'bg-success text-success-foreground',
-};
-const VERDICT_STYLE: Record<Verdict, string> = {
-  high: 'bg-destructive text-destructive-foreground', medium: 'bg-warning text-warning-foreground',
-  low: 'bg-secondary text-secondary-foreground', supported: 'bg-success text-success-foreground',
-};
-
-function Section({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
-  return <section className="analysis-section"><h2>{title}</h2>{sub && <p className="mt-2 text-sm text-muted-foreground">{sub}</p>}<div className={sub ? '' : 'mt-6'}>{children}</div></section>;
-}
-
-function Analysis({ founderId }: { founderId: string }) {
-  const q = useQuery({ queryKey: ['analysis', founderId], queryFn: () => getTidewellAnalysis({ data: { founder_id: founderId } }), staleTime: 0, refetchOnMount: 'always' });
-  if (q.isPending) return <Loading label="Computing Tidewell’s numbers…" />;
-  if (q.isError) return <p role="alert" className="text-destructive">{q.error.message}</p>;
-  const a = q.data;
-  const metrics = KEY_METRICS.map(id => a.metrics[id]).filter((m): m is Metric => !!m);
-  return <TooltipProvider delayDuration={150}>
-    <Readiness r={a.readiness} />
-    <Section title="Key metrics" sub="Hover a card for how it was calculated and where the number comes from.">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {metrics.map(m => <Tooltip key={m.id}><TooltipTrigger asChild>
-          <div tabIndex={0} className="metric-card min-h-40 cursor-help rounded-lg border border-border p-5 outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            <div className="mb-3 flex items-start justify-between gap-2"><p className="text-xs leading-snug text-muted-foreground">{m.label}</p><Info className="size-3.5 shrink-0 text-muted-foreground" /></div>
-            <p className="text-2xl font-bold tabular-nums">{formatMetric(m)}</p>
-            <Badge variant="outline" className={'mt-3 text-[10px] uppercase tracking-wider ' + (m.basis === 'historical' ? 'border-accent text-accent' : 'border-info text-info')}>{m.basis === 'historical' ? 'Historical' : 'Forecast'}</Badge>
-          </div>
-        </TooltipTrigger><TooltipContent className="max-w-xs space-y-1.5 text-xs"><p><span className="font-semibold">Calculation:</span> {m.calculation}</p><p><span className="font-semibold">Source:</span> {m.source}</p></TooltipContent></Tooltip>)}
-      </div>
-    </Section>
-
-    <Section title="Deck claims checked" sub="Each claim in Tidewell’s deck compared against the data.">
-      <div className="overflow-x-auto rounded-lg border border-border bg-card">
-        <table className="w-full text-sm">
-          <thead className="bg-muted text-left text-xs uppercase tracking-wider text-muted-foreground"><tr><th className="px-4 py-3 font-medium">Claim</th><th className="px-4 py-3 font-medium">What the data shows</th><th className="px-4 py-3 font-medium">Status</th></tr></thead>
-          <tbody>{a.claims.map(c => <tr key={c.id} className="border-t border-border align-top">
-            <td className="px-4 py-3 font-medium">“{c.claim}”</td>
-            <td className="px-4 py-3"><p>{c.dataShows}</p>
-              <details className="group mt-2"><summary className="flex cursor-pointer list-none items-center gap-1 text-xs font-medium text-accent">Why <ChevronDown className="size-3 transition-transform group-open:rotate-180" /></summary><p className="mt-1.5 text-muted-foreground">{c.why}</p></details></td>
-            <td className="px-4 py-3"><span className={'inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ' + STATUS_STYLE[c.status]}>{c.status}</span></td>
-          </tr>)}</tbody>
-        </table>
-      </div>
-    </Section>
-
-    <Section title="Forecast assumptions audited" sub="The founders’ forecast drivers compared with what Tidewell actually achieved.">
-      <div className="grid gap-3 md:grid-cols-2">{a.audit.map(item => <article key={item.id} className="rounded-lg border border-border bg-card p-5">
-        <div className="mb-3 flex items-start justify-between gap-3"><h3 className="font-semibold">{item.assumption}</h3><span className={'whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ' + VERDICT_STYLE[item.verdict]}>{item.verdict}{item.verdict !== 'supported' && ' risk'}</span></div>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm"><dt className="text-muted-foreground">Founders</dt><dd className="font-mono">{item.foundersValue}</dd><dt className="text-muted-foreground">History</dt><dd className="font-mono">{item.history}</dd></dl>
-        <p className="mt-3 border-t border-border pt-3 text-sm"><span className="font-semibold">Fix: </span>{item.fix}</p>
-      </article>)}</div>
-    </Section>
-
-    <Section title="Not in the data" sub={a.dataGaps.source}>
-      <ul className="grid gap-2 md:grid-cols-2">{a.dataGaps.items.map(g => <li key={g} className="rounded-md border border-dashed border-border bg-card px-4 py-3 text-sm">{g}</li>)}</ul>
-    </Section>
-
-    <Report founderId={founderId} />
-  </TooltipProvider>;
-}
-
-function Readiness({ r }: { r: Awaited<ReturnType<typeof getTidewellAnalysis>>['readiness'] }) {
-  return <section className="readiness-overview mb-12">
-    <div className="readiness-summary grid gap-8 p-6 md:grid-cols-[220px_1fr] md:p-8">
-      <div><p className="text-xs uppercase tracking-[0.18em] opacity-70">Readiness score</p>
-        <p className="mt-2 text-6xl font-bold text-primary">{r.score}<span className="text-2xl text-muted-foreground">/100</span></p>
-        <p className="mt-1 text-lg font-medium">{r.band}</p></div>
-      <div className="self-end"><p className="mb-2 text-sm opacity-80">Coverage: {Math.round(r.coverage * 100)}% of the 100 points assessed so far</p>
-        <Progress value={r.coverage * 100} className="h-2 bg-primary/10 [&>div]:bg-primary" />
-        {r.topActions.length > 0 && <ol className="mt-4 list-decimal space-y-1 pl-5 text-sm opacity-90">{r.topActions.map(t => <li key={t}>{t}</li>)}</ol>}</div>
-    </div>
-    <div className="grid divide-y divide-border md:grid-cols-2 md:divide-x md:divide-y-0 lg:grid-cols-3">{r.components.map(c => <div key={c.id} className="border-border p-5 [&:nth-child(n+3)]:md:border-t lg:[&:nth-child(n+3)]:border-t-0 lg:[&:nth-child(n+4)]:border-t">
-      <div className="mb-2 flex items-baseline justify-between gap-2"><h3 className="text-sm font-semibold">{c.label}</h3>
-        <span className="font-mono text-sm">{c.assessed ? `${Math.round(c.earned * 10) / 10}/${c.max}` : <span className="text-muted-foreground">Not assessed</span>}</span></div>
-      {c.nextSteps.length > 0 && <details className="group mb-2" open={c.nextSteps.length <= 2}><summary className="flex cursor-pointer list-none items-center gap-1 text-xs font-medium text-accent">Next steps ({c.nextSteps.length}) <ChevronDown className="size-3 transition-transform group-open:rotate-180" /></summary><ul className="mt-1.5 space-y-1 text-xs">{c.nextSteps.map(s => <li key={s}>→ {s}</li>)}</ul></details>}
-      {c.evidence.length > 0 && <details className="group"><summary className="flex cursor-pointer list-none items-center gap-1 text-xs font-medium text-muted-foreground">Evidence ({c.evidence.length}) <ChevronDown className="size-3 transition-transform group-open:rotate-180" /></summary><ul className="mt-1.5 space-y-1 text-xs text-muted-foreground">{c.evidence.map(e => <li key={e}>• {e}</li>)}</ul></details>}
-    </div>)}</div>
-    <p className="border-t border-border bg-muted px-5 py-3 text-xs text-muted-foreground">{r.disclaimer}</p>
-  </section>;
-}
-
-function Report({ founderId }: { founderId: string }) {
-  const m = useMutation({ mutationFn: () => vickyReport({ data: { founder_id: founderId } }) });
-  return <Section title="Readiness Report" sub="Vicky writes it from the computed analysis above.">
-    <Button size="lg" onClick={() => m.mutate()} disabled={m.isPending}><FileText className="size-4" />{m.isPending ? 'Vicky is writing…' : m.data ? 'Rewrite my report' : 'Write my report'}</Button>
-    {m.isError && <p role="alert" className="mt-4 text-sm text-destructive">{m.error.message}</p>}
-    {m.data && <article className="mt-6 rounded-xl border border-border bg-card p-6 md:p-8"><Markdown>{m.data.report}</Markdown></article>}
-  </Section>;
+function MeetingPrep({ founderId }: { founderId: string }) {
+  const choice = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const analysis = useQuery({ queryKey: ['analysis', founderId], queryFn: () => getTidewellAnalysis({ data: { founder_id: founderId } }), staleTime: 0, refetchOnMount: 'always' });
+  const brief = useQuery({ queryKey: ['meeting-brief', founderId, choice.persona, choice.stage], queryFn: () => getMeetingBrief({ data: { founder_id: founderId, ...choice } }), staleTime: 0 });
+  return <>
+    <MeetingPickers {...choice} onChange={search => void navigate({ search })} />
+    {analysis.isPending || brief.isPending ? <Loading label="Preparing your meeting…" /> : analysis.isError || brief.isError ? <p role="alert" className="text-destructive">{analysis.error?.message ?? brief.error?.message}</p> : <>
+      <section className="mb-10 rounded-lg border border-border bg-section p-6 md:p-8">
+        <div className="flex flex-col-reverse items-start gap-6 sm:flex-row sm:items-center"><h2 className="flex-1 text-lg font-medium leading-relaxed"><SourceText>{brief.data.headline}</SourceText></h2><div className="flex shrink-0 items-center gap-4">
+          <svg viewBox="0 0 100 100" className="size-24 -rotate-90" role="img" aria-label={`Readiness ${analysis.data.readiness.score} out of 100`}><circle cx="50" cy="50" r="43" fill="none" stroke="var(--border)" strokeWidth="5" /><circle cx="50" cy="50" r="43" fill="none" stroke="var(--primary)" strokeWidth="5" pathLength="100" strokeDasharray={`${analysis.data.readiness.score} 100`} /><text x="50" y="50" textAnchor="middle" dominantBaseline="central" transform="rotate(90 50 50)" className="readiness-ring-label">{analysis.data.readiness.score}/100</text></svg><div><p className="text-xs text-muted-foreground">Readiness</p><p className="text-sm font-semibold">{analysis.data.readiness.band}</p></div>
+        </div></div><p className="mt-5 border-t border-border pt-4 text-xs leading-relaxed text-muted-foreground">{analysis.data.readiness.disclaimer}</p>
+      </section>
+      <MeetingCharts charts={analysis.data.charts} />
+      <div className="mt-3 flex justify-end"><MetricsDialog metrics={analysis.data.metrics} /></div>
+      <section className="mt-14"><h2 className="mb-6 text-2xl font-bold">Tighten before you send it</h2><div className="divide-y divide-border border-y border-border">{brief.data.tighten.map((item, i) => <article key={item.id} className="grid gap-3 py-5 sm:grid-cols-[32px_1fr]"><span className="text-sm font-semibold text-primary">0{i + 1}</span><div><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h3 className="text-sm font-semibold">{item.title}</h3><Sources refs={item.refs} /></div><div className="grid gap-3 text-sm leading-relaxed md:grid-cols-2"><div><p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">What the data shows now</p><SourceText>{item.now}</SourceText></div><div><p className="mb-1 text-[10px] font-semibold uppercase text-primary">The fix</p><SourceText>{item.fix}</SourceText></div></div></div></article>)}</div></section>
+      <section className="mt-14"><h2 className="mb-6 text-2xl font-bold">Where the numbers don't back the story</h2><div className="grid gap-4 md:grid-cols-2">{analysis.data.storyChecks.map(s => <article key={s.id} className="rounded-lg border border-border p-5"><h3 className="mb-4 text-sm font-semibold">{s.title}</h3><div className="grid grid-cols-2 gap-4 text-sm leading-relaxed"><div><p className="mb-2 text-[10px] font-semibold uppercase text-primary">Plan</p><SourceText>{s.plan}</SourceText></div><div><p className="mb-2 text-[10px] font-semibold uppercase text-muted-foreground">History</p><SourceText>{s.history}</SourceText></div></div><div className="mt-4"><Sources refs={s.refs} /></div></article>)}</div></section>
+      <section className="mt-14"><h2 className="mb-6 text-2xl font-bold">Ten questions they'll ask</h2><Accordion type="multiple">{brief.data.questions.map((q, i) => <AccordionItem key={q.id} value={q.id}><AccordionTrigger className="text-left text-sm"><span><span className="mr-3 text-primary">{String(i + 1).padStart(2, '0')}</span>{q.question}</span></AccordionTrigger><AccordionContent><p className="mb-5 text-xs text-muted-foreground"><strong>Why they ask: </strong><SourceText>{q.whyTheyAsk}</SourceText></p><div className="grid gap-6 sm:grid-cols-2"><div className="text-muted-foreground"><h3 className="mb-2 flex items-center gap-2 text-xs font-semibold"><AlertTriangle className="size-3.5 text-warning" />What you'd say today</h3><SourceText>{q.youWouldSay}</SourceText></div><div><h3 className="mb-2 text-xs font-semibold text-primary">What your numbers support</h3><SourceText>{q.numbersSupport}</SourceText></div></div><Button asChild size="sm" className="mt-5"><Link to="/practice" search={{ ...choice, question: q.id, mode: 'question' }}>Practise this<ArrowUpRight className="size-3" /></Link></Button></AccordionContent></AccordionItem>)}</Accordion></section>
+    </>}
+  </>;
 }

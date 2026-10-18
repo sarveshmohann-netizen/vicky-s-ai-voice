@@ -1,4 +1,8 @@
 # Tasks
+- [x] Simplify navigation to Meeting prep and Practice using the latest read-only engine.
+- [x] Add seven investor choices, stage-aware questions/chat and meeting brief RPC.
+- [x] Build meeting brief charts, story checks, source chips and metrics dialog.
+- [x] Combine question grading, Ask and simulation in Practice; verify signed-in flow and tests.
 - [x] Confirm merged Tidewell source is available.
 - [x] Create practice records and lessons with enforced access and grade validation.
 - [x] Add the lessons admin page with add and delete actions.

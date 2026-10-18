@@ -1,11 +1,21 @@
 import { createServerFn } from '@tanstack/react-start';
 import { setResponseHeader } from '@tanstack/react-start/server';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
-import { assertFounderAccess, optionalFounderInput, questionsInput, chatInput, gradeInput } from './vicky-inputs';
+import { assertFounderAccess, optionalFounderInput, questionsInput, chatInput, gradeInput, meetingInput } from './vicky-inputs';
 import { loadFounderData } from './vicky-data.server';
 import { reportForFounder, gradeForFounder } from './vicky-service.server';
 import { selectQuestions } from './vicky/knowledge';
 import { toKnowledgeAnalysis } from './vicky/tidewell/analysis';
+import { meetingBrief } from './vicky/tidewell/brief';
+
+export const getMeetingBrief = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
+  .inputValidator(input => meetingInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const id = assertFounderAccess(context.userId, data.founder_id);
+    setResponseHeader('Cache-Control', 'no-store');
+    const { analysis, history } = await loadFounderData(context.supabase, id);
+    return meetingBrief(data.persona, data.stage, history, analysis);
+  });
 
 export const getTidewellAnalysis = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(input => optionalFounderInput.parse(input))
@@ -47,5 +57,5 @@ export const getPracticeQuestions = createServerFn({ method: 'POST' }).middlewar
     const id = assertFounderAccess(context.userId, data.founder_id);
     setResponseHeader('Cache-Control', 'no-store');
     const { analysis, history } = await loadFounderData(context.supabase, id);
-    return selectQuestions(toKnowledgeAnalysis(analysis), history, data.persona, 5);
+    return selectQuestions(toKnowledgeAnalysis(analysis), history, data.persona, 5, data.stage);
   });
