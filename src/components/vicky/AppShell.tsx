@@ -28,7 +28,9 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-background text-foreground">
       <AppHeader />
-      <h1 className="mx-auto max-w-6xl px-5 pt-6 text-xl font-semibold">{title}</h1>
+      <h1 className="font-heading mx-auto max-w-6xl px-5 pt-8 text-3xl font-bold text-navy">
+        {title}
+      </h1>
       <main className="vicky-content mx-auto max-w-6xl px-5 md:px-8">
         <ClientOnly fallback={<Loading />}>
           <SessionGate>{children}</SessionGate>
@@ -38,34 +40,56 @@ export function AppShell({
   );
 }
 
-export function AppHeader() {
+export function AppHeader({ transparent = false }: { transparent?: boolean }) {
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 py-4 md:px-8">
+    <header
+      className={
+        "sticky top-0 z-20 backdrop-blur " +
+        (transparent ? "bg-transparent" : "border-b border-border bg-card/95")
+      }
+    >
+      <div className="mx-auto grid max-w-7xl grid-cols-[1fr_auto] items-center gap-x-6 gap-y-3 px-5 py-4 md:grid-cols-[1fr_auto_1fr] md:px-8">
         <Link
           to="/"
           search={(prev) => meetingSearchSchema.parse(prev)}
           className="flex items-center gap-3"
         >
-          <img src="/brand/june-analytics-logo.png" alt="June Analytics" className="h-8 w-auto" />
-          <span className="border-l border-border pl-3 text-lg font-bold">
+          <img src="/brand/june-analytics-logo.png" alt="June Analytics" className="h-7 w-auto" />
+          <span className="font-heading border-l border-navy/20 pl-3 text-lg font-bold text-navy">
             Vicky<span className="text-primary">.</span>
           </span>
         </Link>
-        <nav aria-label="Main" className="-mx-1 flex max-w-full gap-1 overflow-x-auto">
+        <nav
+          aria-label="Main"
+          className="order-3 col-span-2 -mx-1 flex max-w-full gap-1 overflow-x-auto md:order-none md:col-span-1"
+        >
           {NAV.map((n) => (
             <Link
               key={n.to}
               to={n.to}
               search={(prev) => ({ ...meetingSearchSchema.parse(prev), mode: "question" as const })}
               activeOptions={{ exact: true, includeSearch: false }}
-              className="whitespace-nowrap rounded-md px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
-              activeProps={{ className: "bg-secondary !text-primary" }}
+              className="whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium text-navy/70 transition-colors hover:bg-white/60 hover:text-navy"
+              activeProps={{ className: "bg-white !text-navy shadow-sm ring-1 ring-navy/10" }}
             >
               {n.label}
             </Link>
           ))}
         </nav>
+        <div className="flex justify-end">
+          <Button
+            asChild
+            size="sm"
+            className="rounded-lg bg-navy px-4 text-navy-foreground hover:bg-navy/90"
+          >
+            <Link
+              to="/practice"
+              search={(prev) => ({ ...meetingSearchSchema.parse(prev), mode: "ask" as const })}
+            >
+              Ask Vicky
+            </Link>
+          </Button>
+        </div>
       </div>
     </header>
   );
@@ -96,7 +120,9 @@ export function SessionGate({ children }: { children: (userId: string) => ReactN
     return (
       <section className="mx-auto max-w-md py-8 text-center">
         <LockKeyhole className="mx-auto mb-4 size-7 text-primary" />
-        <h2 className="mb-1 text-xl font-semibold">Sign in to work with Vicky</h2>
+        <h2 className="font-heading mb-1 text-2xl font-bold text-navy">
+          Sign in to work with Vicky
+        </h2>
         <p className="mb-6 text-sm text-muted-foreground">
           Your practice answers and readiness score are saved to your account.
         </p>

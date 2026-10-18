@@ -36,14 +36,14 @@ function Learn() {
       <AppHeader />
       <ContextBar />
       <main className="mx-auto max-w-6xl px-5 py-6">
-        <h1 className="mb-6 text-xl font-semibold">Learn</h1>
+        <h1 className="font-heading mb-8 text-4xl font-bold text-navy">Learn</h1>
         {error && <p role="alert">{error.message}</p>}
         {!data ? (
           <Loading />
         ) : (
           [...new Set(terms.map((t) => t.group))].map((group) => (
             <section key={group} className="mb-10">
-              <h2 className="mb-4 text-base font-semibold">{group}</h2>
+              <h2 className="font-heading mb-4 text-xl font-bold text-navy">{group}</h2>
               <div className="grid gap-4 md:grid-cols-3">
                 {terms
                   .filter((t) => t.group === group)

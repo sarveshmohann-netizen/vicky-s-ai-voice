@@ -57,6 +57,25 @@ const KIND: Record<ChartId, ValueKind> = {
 
 type Row = Record<string, unknown>;
 
+// A filled dot with a soft halo on the last point of each line, so the eye
+// lands on where the series ends up.
+function endDot(data: Row[], key: string, color: string) {
+  let last = -1;
+  data.forEach((r, i) => {
+    if (typeof r[key] === "number") last = i;
+  });
+  function EndDot(p: { cx?: number; cy?: number; index?: number }) {
+    if (p.index !== last || p.cx == null || p.cy == null) return <g key={p.index} />;
+    return (
+      <g key={p.index}>
+        <circle cx={p.cx} cy={p.cy} r={9} fill={color} opacity={0.2} />
+        <circle cx={p.cx} cy={p.cy} r={4.5} fill={color} stroke="var(--card)" strokeWidth={2} />
+      </g>
+    );
+  }
+  return EndDot;
+}
+
 export function EngineChart({
   id,
   charts,
@@ -78,10 +97,12 @@ export function EngineChart({
   const xTick = (v: unknown) => formatAxisLabel(v, false);
 
   return (
-    <section className="min-w-0 rounded-xl border border-border bg-card p-5">
+    <section className="min-w-0 rounded-2xl border border-border bg-card p-5 md:p-6">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold text-foreground">{CHART_CATALOG[id].title}</h3>
+          <h3 className="font-heading text-lg font-bold text-foreground">
+            {CHART_CATALOG[id].title}
+          </h3>
           {inline && <p className="mt-0.5 text-xs text-muted-foreground">From your dashboard</p>}
         </div>
         {series.length > 1 && (
@@ -152,8 +173,11 @@ export function EngineChart({
                       key={s.key}
                       dataKey={s.key}
                       stroke={s.color}
-                      strokeWidth={2.5}
+                      strokeWidth={3}
                       fill="url(#vicky-mrr-fill)"
+                      className="vicky-line-glow"
+                      dot={endDot(data, s.key, s.color)}
+                      activeDot={{ r: 5, stroke: "var(--card)", strokeWidth: 2 }}
                       connectNulls
                       isAnimationActive={false}
                     />
@@ -165,6 +189,7 @@ export function EngineChart({
                       strokeWidth={2}
                       strokeDasharray={s.dash}
                       fill="none"
+                      dot={endDot(data, s.key, s.color)}
                       connectNulls
                       isAnimationActive={false}
                     />
@@ -266,9 +291,10 @@ export function EngineChart({
                     key={s.key}
                     dataKey={s.key}
                     stroke={s.color}
-                    strokeWidth={2.5}
+                    strokeWidth={3}
                     strokeDasharray={s.dash}
-                    dot={false}
+                    dot={endDot(data, s.key, s.color)}
+                    activeDot={{ r: 5, stroke: "var(--card)", strokeWidth: 2 }}
                     connectNulls
                     isAnimationActive={false}
                   />
