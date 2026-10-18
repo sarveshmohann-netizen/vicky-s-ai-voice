@@ -9,6 +9,9 @@ import { auditAssumptions, auditFlags, type AuditItem } from "./audit.ts";
 import { checkDeckClaims, type ClaimCheck } from "./claims.ts";
 import { COMPANY, DATA_GAPS, FORECAST_BY_QUARTER, FORECAST_SOURCE, GAPS_SOURCE, RUNWAY_AFTER_RAISE, SNAPSHOT, USE_OF_FUNDS } from "./facts.ts";
 import { checkIncomeStatement, computeMetrics, formatMetric, type ConsistencyResult, type Metric } from "./metrics.ts";
+import { buildCharts, type TidewellCharts } from "./charts.ts";
+import { shortRefs } from "./refs.ts";
+import { storyChecks, type StoryCheck } from "./story.ts";
 
 export interface TidewellAnalysis {
   company: typeof COMPANY;
@@ -16,6 +19,8 @@ export interface TidewellAnalysis {
   incomeStatementChecks: ConsistencyResult[];
   claims: ClaimCheck[];
   audit: AuditItem[];
+  storyChecks: StoryCheck[];
+  charts: TidewellCharts;
   flags: AssumptionFlag[];
   readiness: ReadinessResult;
   forecast: { byQuarter: typeof FORECAST_BY_QUARTER; source: string; runwayAfterRaise: typeof RUNWAY_AFTER_RAISE; useOfFunds: typeof USE_OF_FUNDS };
@@ -32,7 +37,7 @@ export function analyzeTidewell(practice?: PracticeInput): TidewellAnalysis {
   const incomeStatementChecks = checkIncomeStatement();
   const claims = checkDeckClaims(metrics);
   const audit = auditAssumptions();
-  const flags = auditFlags(audit);
+  const flags = auditFlags(audit).map((f) => ({ ...f, source: shortRefs(f.source).join(", ") }));
 
   const consistencyChecks: ConsistencyCheck[] = [
     ...incomeStatementChecks,
@@ -57,6 +62,8 @@ export function analyzeTidewell(practice?: PracticeInput): TidewellAnalysis {
     incomeStatementChecks,
     claims,
     audit,
+    storyChecks: storyChecks(metrics),
+    charts: buildCharts(claims, metrics, SNAPSHOT.customers.value),
     flags,
     readiness,
     forecast: { byQuarter: FORECAST_BY_QUARTER, source: FORECAST_SOURCE, runwayAfterRaise: RUNWAY_AFTER_RAISE, useOfFunds: USE_OF_FUNDS },
@@ -72,11 +79,17 @@ export function toKnowledgeAnalysis(t: TidewellAnalysis): Analysis {
     flags: t.flags,
     numbers: {
       company: { name: t.company.name, product: t.company.product, raise: t.company.raise, currency: t.company.currency },
-      metrics: Object.values(t.metrics).map((m) => ({ id: m.id, label: m.label, value: formatMetric(m), basis: m.basis, calculation: m.calculation, source: m.source })),
+      metrics: Object.values(t.metrics).map((m) => ({ id: m.id, label: m.label, value: formatMetric(m), basis: m.basis, how: m.calculation, cite: shortRefs(m.source) })),
       snapshot: { cash: SNAPSHOT.cash.value, customers: SNAPSHOT.customers.value, seats: SNAPSHOT.seats.value, headcount: SNAPSHOT.headcount.value, asOf: "2026-09-30" },
-      deckClaims: t.claims.map(({ claim, status, dataShows, why }) => ({ claim, status, dataShows, why })),
-      forecastAssumptions: t.audit.map(({ assumption, foundersValue, history, verdict, fix }) => ({ assumption, foundersValue, history, verdict, fix })),
-      forecast: { basis: "forecast", source: t.forecast.source, byQuarter: t.forecast.byQuarter, runwayAfterRaise: t.forecast.runwayAfterRaise, useOfFunds: t.forecast.useOfFunds },
+      deckClaims: t.claims.map(({ claim, status, dataShows, why, sources }) => ({ claim, status, dataShows, why, cite: ["Deck", ...sources.slice(1).flatMap(shortRefs)] })),
+      forecastAssumptions: t.audit.map(({ assumption, foundersValue, history, verdict, fix, source }) => ({ assumption, foundersValue, history, verdict, fix, cite: shortRefs(source) })),
+      storyChecks: t.storyChecks.map(({ title, plan, history, refs }) => ({ title, plan, history, cite: refs })),
+      plan: {
+        cite: ["Plan"],
+        byQuarter: t.forecast.byQuarter,
+        runwayAfterRaise: { foundersPlanMonths: t.forecast.runwayAfterRaise.foundersPlanMonths.value, atActualGrowthMonths: t.forecast.runwayAfterRaise.historicalDriversMonths.value, ifRoundSlipsToAprilRunsOutBy: t.forecast.runwayAfterRaise.slipToAprilRunsOutBy, cite: ["Pack D10", "Pack D11"] },
+        useOfFunds: t.forecast.useOfFunds,
+      },
       notInTheData: t.dataGaps.items,
     },
   };
