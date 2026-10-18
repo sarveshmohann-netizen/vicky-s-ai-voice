@@ -1,4 +1,8 @@
 # Tasks
+- [ ] Build public compact Dashboard and one shared URL choice bar; add Learn.
+- [ ] Centre saved Vicky chat with suggestions, likely questions and engine-rendered charts/what-ifs/glossary.
+- [ ] Add avatar activity, browser voice and private persisted reply feedback.
+- [ ] Verify public and signed-in flows, mobile layout and preserved engine tests.
 - [x] Add private companies, validated uploads and editable company details.
 - [x] Integrate company dashboards, investor lens, nonempty charts and URL switcher.
 - [x] Scope chat and grading to company data; render compact source chips and human replies.
