@@ -1,7 +1,7 @@
 # Tasks
-- [ ] Add private saved conversations and messages with founder-only access.
-- [ ] Build Practice sidebar, dedicated chat URLs, settings, editing, regeneration and in-chat grading.
-- [ ] Verify two restored chats, question launch, privacy, edit/regenerate, grading and mobile drawer.
+- [x] Add private saved conversations and messages with founder-only access.
+- [x] Build Practice sidebar, dedicated chat URLs, settings, editing, regeneration and in-chat grading.
+- [x] Verify two restored chats, question launch, privacy, edit/regenerate, grading and mobile drawer.
 - [x] Simplify navigation to Meeting prep and Practice using the latest read-only engine.
 - [x] Add seven investor choices, stage-aware questions/chat and meeting brief RPC.
 - [x] Build meeting brief charts, story checks, source chips and metrics dialog.
