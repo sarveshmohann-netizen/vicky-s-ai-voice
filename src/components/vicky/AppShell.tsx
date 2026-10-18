@@ -1,17 +1,15 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { ClientOnly, Link } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Loader2, LockKeyhole, LogOut, ArrowUpRight } from 'lucide-react';
+import { Loader2, LockKeyhole, LogOut } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { lovable } from '@/integrations/lovable';
 import { supabase } from '@/integrations/supabase/client';
 
 const NAV = [
-  { to: '/', label: 'Analyze the Numbers' },
-  { to: '/ask', label: 'Ask Vicky' },
-  { to: '/prepare', label: 'Prepare the Founder' },
-  { to: '/simulate', label: 'Simulate the Pitch' },
+  { to: '/', label: 'Meeting prep' },
+  { to: '/practice', label: 'Practice' },
 ] as const;
 
 export function AppShell({ title, eyebrow, intro, children }: { title: string; eyebrow: string; intro: string; children: (userId: string) => ReactNode }) {
@@ -40,7 +38,6 @@ export function AppHeader() {
             className="whitespace-nowrap rounded-md px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
             activeProps={{ className: 'bg-secondary !text-primary' }}>{n.label}</Link>)}
         </nav>
-        <Button asChild size="sm" className="hidden xl:inline-flex"><Link to="/prepare">Get pitch-ready<ArrowUpRight /></Link></Button>
       </div>
     </header>;
 }

@@ -1,12 +1,15 @@
 import { z } from 'zod';
 import { QUESTIONS, type Topic } from './vicky/knowledge';
 
-export const personaSchema = z.enum(['lead-seed', 'angel-operator', 'strategic', 'gov-fund', 'skeptic']);
+export const personaSchema = z.enum(['lead-seed', 'angel-operator', 'strategic', 'gov-fund', 'skeptic', 'yc', 'a16z']);
+export const stageSchema = z.enum(['pre-seed', 'seed', 'series-a']);
+export const meetingSearchSchema = z.object({ persona: personaSchema.catch('lead-seed'), stage: stageSchema.catch('seed') });
 export const founderInput = z.object({ founder_id: z.string().uuid() });
 export const optionalFounderInput = z.object({ founder_id: z.string().uuid().optional() }).default({});
-export const questionsInput = founderInput.extend({ persona: personaSchema.optional() });
+export const questionsInput = founderInput.extend({ persona: personaSchema.optional(), stage: stageSchema.default('seed') });
+export const meetingInput = founderInput.extend({ persona: personaSchema, stage: stageSchema });
 export const chatInput = founderInput.extend({
-  mode: z.enum(['ask', 'simulate']), persona: personaSchema.optional(),
+  mode: z.enum(['ask', 'simulate']), persona: personaSchema.optional(), stage: stageSchema.default('seed'),
   messages: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().min(1).max(20000) })).min(1).max(100),
 });
 export const gradeInput = founderInput.extend({ questionId: z.string().min(1), flagId: z.string().min(1).optional(), answer: z.string().trim().min(1).max(20000) });

@@ -12,10 +12,10 @@ export function VickyAvatar() {
   return <img src="/brand/june-analytics-mark.png" alt="" className="size-7 shrink-0 rounded-md border border-border bg-card p-0.5" />;
 }
 
-export function Chat({ founderId, mode, persona, placeholder, starter, empty }: {
-  founderId: string; mode: 'ask' | 'simulate'; persona?: ChatInput['persona']; placeholder: string; starter?: string; empty?: ReactNode;
+export function Chat({ founderId, mode, persona, stage = 'seed', placeholder, starter, empty, initialQuestion }: {
+  founderId: string; mode: 'ask' | 'simulate'; persona?: ChatInput['persona']; stage?: ChatInput['stage']; placeholder: string; starter?: string; empty?: ReactNode; initialQuestion?: string;
 }) {
-  const [messages, setMessages] = useState<Msg[]>([]);
+  const [messages, setMessages] = useState<Msg[]>(initialQuestion ? [{ role: 'assistant', content: initialQuestion }] : []);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -30,7 +30,7 @@ export function Chat({ founderId, mode, persona, placeholder, starter, empty }: 
     setDraft(''); setError(''); setBusy(true);
     const ctrl = new AbortController(); abort.current = ctrl;
     try {
-      const res = await startVickyChat({ founder_id: founderId, mode, ...(persona ? { persona } : {}), messages: next }, ctrl.signal);
+      const res = await startVickyChat({ founder_id: founderId, mode, stage, ...(persona ? { persona } : {}), messages: next }, ctrl.signal);
       if (!res.body) throw new Error('Vicky could not start a reply. Please try again.');
       const reader = res.body.getReader();
       const dec = new TextDecoder();
