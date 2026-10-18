@@ -54,6 +54,9 @@
   --font-sans: var(--app-sans);
   --font-mono: var(--app-mono);
   --font-display: var(--app-display);
+  --font-heading: var(--app-heading);
+  --color-navy: var(--navy);
+  --color-navy-foreground: var(--navy-foreground);
   --color-section: var(--section);
   --color-section-foreground: var(--section-foreground);
   --color-success: var(--success);
@@ -76,6 +79,11 @@
   --radius: 0.5rem;
   --app-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --app-display: "Lora", Georgia, serif;
+  --app-heading: "Bricolage Grotesque", "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --navy: oklch(0.22 0.07 262);
+  --navy-foreground: oklch(0.98 0.005 240);
+  --hero-from: oklch(0.95 0.035 245);
+  --hero-to: oklch(0.83 0.09 248);
   --app-mono: "IBM Plex Mono", ui-monospace, monospace;
   --background: oklch(1 0 0);
   --foreground: oklch(0.22 0.035 255);
@@ -121,6 +129,10 @@
 }
 
 .dark {
+  --navy: oklch(0.18 0.05 262);
+  --navy-foreground: oklch(0.98 0.005 240);
+  --hero-from: oklch(0.25 0.06 262);
+  --hero-to: oklch(0.32 0.1 258);
   --section: oklch(0.24 0.045 255);
   --section-foreground: oklch(0.94 0.02 255);
   --background: oklch(0.129 0.042 264.695);
@@ -206,3 +218,25 @@
 @keyframes vicky-bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
 @keyframes vicky-ring{50%{box-shadow:0 0 0 5px var(--secondary)}}
 @media(prefers-reduced-motion:reduce){.vicky-dots i{animation-name:vicky-fade}.vicky-avatar.is-speaking img{animation:none} @keyframes vicky-fade{50%{opacity:1}0%,100%{opacity:.3}}}
+
+/* Landing-page look: a soft blue hero, a navy band, and bold grotesque headings. */
+.vicky-hero { background: linear-gradient(180deg, var(--hero-from) 0%, var(--hero-to) 100%); }
+.font-heading { font-family: var(--app-heading); letter-spacing: -0.02em; }
+.vicky-card-glow {
+  background: linear-gradient(160deg, oklch(0.95 0.04 245) 0%, oklch(0.8 0.1 250) 100%);
+}
+/* Charts sitting on the navy band: the card and lines take lighter blues so the
+   trend glows against the dark background, like the landing-page results chart. */
+.on-navy {
+  --card: oklch(0.26 0.075 262);
+  --card-foreground: oklch(0.98 0.005 240);
+  --foreground: oklch(0.98 0.005 240);
+  --muted-foreground: oklch(0.82 0.03 250);
+  --border: oklch(1 0 0 / 12%);
+  --secondary: oklch(1 0 0 / 8%);
+  --chart-1: oklch(0.78 0.13 240);
+  --chart-2: oklch(0.92 0.03 250);
+  --chart-3: oklch(0.55 0.08 255);
+  --chart-4: oklch(0.7 0.12 225);
+}
+.vicky-line-glow { filter: drop-shadow(0 0 6px color-mix(in oklch, var(--chart-1) 60%, transparent)); }

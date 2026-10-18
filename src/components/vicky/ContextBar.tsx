@@ -3,16 +3,22 @@ import { useVickySession } from "@/hooks/use-vicky-dashboard";
 import { meetingSearchSchema } from "@/lib/vicky-inputs";
 import { CompanySwitcher } from "./CompanySwitcher";
 import { MeetingPickers } from "./MeetingPickers";
-export function ContextBar() {
+export function ContextBar({ bare = false }: { bare?: boolean }) {
   const location = useLocation(),
     navigate = useNavigate(),
     session = useVickySession();
   const choice = meetingSearchSchema.parse(location.search);
   return (
-    <div className="shrink-0 border-b border-border bg-section">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-5 py-3">
+    <div className={bare ? "" : "shrink-0 border-b border-border bg-section"}>
+      <div
+        className={
+          bare
+            ? "flex flex-wrap items-center justify-center gap-3"
+            : "mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-5 py-3"
+        }
+      >
         <CompanySwitcher founderId={session?.user.id} />
-        <span className="hidden h-6 border-l border-border sm:block" />
+        {!bare && <span className="hidden h-6 border-l border-border sm:block" />}
         <MeetingPickers
           {...choice}
           onChange={(next) => {
