@@ -25,7 +25,8 @@ export async function gradeForFounder(client: SupabaseClient<Database>, userId: 
   const metrics = 'profile' in data ? companyKnownMetrics(data.analysis, data.profile) : knownMetrics(data.analysis);
   const factChecks = factCheckAnswer(input.answer, metrics);
   const system = buildSystemPrompt({ mode: 'ask', analysis, history: data.history, lessons: data.lessons, ...(input.company_id ? { workedExamples: false } : {}) });
-  const prompt = gradingPrompt(input.investorQuestion ? { ...question, question:input.investorQuestion } : question, input.answer, analysis);
+  const rubricQuestion = input.company_id ? { ...question, question: input.investorQuestion ?? question.genericQuestion ?? question.question, strongAnswer: question.testing } : input.investorQuestion ? { ...question, question:input.investorQuestion } : question;
+  const prompt = gradingPrompt(rubricQuestion, input.answer, analysis);
   const ai = createVickyAI();
   const parsed = await gradeWithRetry(retry => ai.text(system, [{ role: 'user', content: prompt + '\nCODE FACT CHECKS: ' + JSON.stringify(factChecks) + (retry ? '\nThe last response could not be parsed. Return only the requested grade JSON, with every criterion present.' : '') }]), question.id, input.flagId);
   if (!parsed) return { error: 'Vicky could not produce a usable grade after two attempts. Nothing was saved.' };

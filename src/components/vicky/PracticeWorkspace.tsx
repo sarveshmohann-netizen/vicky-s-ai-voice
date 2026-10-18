@@ -335,7 +335,7 @@ function Workspace({
               key={id}
               conversation={active.data.conversation}
               initialMessages={active.data.messages}
-              launch={QUESTIONS.find((q) => q.id === search.question)?.question}
+              launch={(() => { const q=QUESTIONS.find(q=>q.id===search.question); return active.data.conversation.company_id ? q?.genericQuestion ?? q?.question : q?.question; })()}
               onBusy={setBusy}
             />
           )
