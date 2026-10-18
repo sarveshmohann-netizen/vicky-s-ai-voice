@@ -16,11 +16,11 @@ export interface Benchmark {
   id: string;
   topic: Topic;
   statement: string;
-  source: { name: string; url: string };
+  source: { name: string; short: string; checked: string; url: string };
 }
 
 // Only benchmarks from pages we have opened and checked. Add more with a source link.
-const SAASTR = { name: "SaaStr, top metrics Series A investors look at", url: "https://www.saastr.com/dear-saastr-what-are-the-top-10-metrics-series-a-investors-look-at" };
+const SAASTR = { name: "SaaStr, top metrics Series A investors look at", short: "SaaStr", checked: "Oct 2026", url: "https://www.saastr.com/dear-saastr-what-are-the-top-10-metrics-series-a-investors-look-at" };
 export const BENCHMARKS: Benchmark[] = [
   { id: "arr-growth", topic: "growth", statement: "Series A investors look for 7-15% month-over-month ARR growth; under $1M ARR, show a path to $1M within 12-18 months.", source: SAASTR },
   { id: "ndr", topic: "retention", statement: "Net dollar retention of 120%+ is top tier; at seed, at least 100%.", source: SAASTR },
@@ -64,7 +64,7 @@ export const QUESTIONS: Question[] = [
   D(15, "valuation", ["valuation"], "What valuation are you looking for?", "Whether expectations are realistic, and sometimes to anchor the negotiation.", "A number with no reasoning, or 'whatever the market says'.", "We'd like the lead to propose terms. Here are our metrics, the round size and the two SAFEs converting at this round with $10M and $15M caps. (Vicky explains how valuation, dilution and SAFE conversion work, but never recommends a valuation.)"),
 ];
 
-export type PersonaId = "lead-seed" | "angel-operator" | "strategic" | "gov-fund" | "skeptic";
+export type PersonaId = "lead-seed" | "angel-operator" | "strategic" | "gov-fund" | "skeptic" | "yc" | "a16z";
 
 export interface Persona {
   id: PersonaId;
@@ -76,6 +76,7 @@ export interface Persona {
   style: string;
   questionIds: string[]; // Appendix D questions this investor asks first
   ownQuestions: string[]; // questions only this investor type asks
+  basedOn?: { title: string; short: string; url: string }; // public writing the profile is drawn from
 }
 
 // The five investor archetypes from Supporting Resources, Appendix E. Not real firms or people.
@@ -112,6 +113,24 @@ export const PERSONAS: Record<PersonaId, Persona> = {
     style: "Thorough and process-driven. Asks for documents. Interested in the finance function, which Tidewell does not have yet.",
     questionIds: ["runway", "milestones"], ownQuestions: ["Who prepares your financial statements?", "How are the SR&ED claims prepared and recorded?", "Who will lead the round?"],
   },
+  yc: {
+    id: "yc", name: "Y Combinator partner", cheque: "Accelerator, then seed",
+    focus: ["growth", "runway", "burn", "market"],
+    evaluates: "Whether you can say what you do in one sentence, how fast you're growing, and whether you can reach profitability on the money you have.",
+    saysNoWhen: "You can't explain the business simply, or a number moves when they ask a follow-up.",
+    style: "Fast and direct. Short meetings. Wants the growth rate and the plain answer first, then stops you when you ramble.",
+    questionIds: ["growth", "arr", "churn", "runway", "raise-slips", "milestones"], ownQuestions: ["What do you do, in one sentence?", "Are you default alive?"],
+    basedOn: { title: "YC's published pitching and seed guides, and Paul Graham's Default Alive or Default Dead?", short: "YC", url: "https://www.ycombinator.com/library/4A-a-guide-to-seed-fundraising" },
+  },
+  a16z: {
+    id: "a16z", name: "a16z partner", cheque: "Seed to Series A",
+    focus: ["growth", "cac", "margin", "churn", "retention"],
+    evaluates: "Metrics defined the standard way: ARR without one-time fees, CAC with every sales and marketing cost, gross margin with support, churn and retention by cohort.",
+    saysNoWhen: "A metric is defined to flatter the company.",
+    style: "Analytical. Asks how each number is defined before talking about whether it's good.",
+    questionIds: ["arr", "gross-margin", "cac", "churn", "nrr", "forecast-assumptions"], ownQuestions: ["Is that bookings or revenue?", "Is your CAC blended or paid only?"],
+    basedOn: { title: "Andreessen Horowitz, 16 Startup Metrics", short: "a16z", url: "https://a16z.com/16-startup-metrics/" },
+  },
   skeptic: {
     id: "skeptic", name: "Skeptical partner", cheque: "None; votes in the partner meeting",
     focus: ["growth", "concentration", "churn", "market", "runway"],
@@ -124,6 +143,8 @@ export const PERSONAS: Record<PersonaId, Persona> = {
 
 // Public sources from Supporting Resources, Appendix F (links checked by the organisers on Oct 14 2026).
 // Vicky links to these instead of quoting unsourced benchmarks.
+// The organisers checked every link on Oct 14 2026.
+export const RESOURCES_CHECKED = "Oct 2026";
 export interface Resource { title: string; publisher: string; url: string; topics: Topic[] | "all" }
 export const RESOURCES: Resource[] = [
   { title: "How to Pitch Your Startup", publisher: "Y Combinator", url: "https://www.ycombinator.com/library/6q-how-to-pitch-your-startup", topics: "all" },
@@ -148,6 +169,21 @@ export function selectResources(topics: Iterable<Topic>, max = 6): Resource[] {
   const set = new Set(topics);
   return RESOURCES.filter((r) => r.topics === "all" || r.topics.some((t) => set.has(t))).slice(0, max);
 }
+
+export type Stage = "pre-seed" | "seed" | "series-a";
+
+export interface StageProfile {
+  id: Stage;
+  label: string;
+  focus: Topic[];
+  wants: string;
+}
+
+export const STAGES: Record<Stage, StageProfile> = {
+  "pre-seed": { id: "pre-seed", label: "Pre-seed", focus: ["team", "market", "growth"], wants: "Founders who understand the problem, early proof that customers want the product, and a clear plan for the first raise." },
+  seed: { id: "seed", label: "Seed", focus: ["growth", "retention", "cac", "runway", "use-of-funds"], wants: "Real growth and retention, sensible unit economics, and a forecast that traces back to history and reaches Series A milestones." },
+  "series-a": { id: "series-a", label: "Series A", focus: ["retention", "cac", "burn", "margin", "growth"], wants: "Efficient, repeatable growth: strong retention, CAC paid back within a year, and a burn multiple that holds up as spending rises." },
+};
 
 export const RUBRIC =
   "Grade the answer 0-4 on each criterion. evidence: cites the company's own data. clarity: plain, direct, answers the question asked. accuracy: every number and claim matches the provided data. ownership: acknowledges weaknesses and gives a plan.";
@@ -207,7 +243,7 @@ export function flagTopics(flag: AssumptionFlag): Topic[] {
 const gradeQuality = (g: AnswerGrade) => (g.evidence + g.clarity + g.accuracy + g.ownership) / 16;
 
 // Topic priorities from this company's own analysis and the founder's history.
-export function topicWeights(a: Analysis, history: PracticeRecord[] = [], persona?: PersonaId): Map<Topic, number> {
+export function topicWeights(a: Analysis, history: PracticeRecord[] = [], persona?: PersonaId, stage?: Stage): Map<Topic, number> {
   const w = new Map<Topic, number>();
   const add = (t: Topic, n: number) => w.set(t, (w.get(t) ?? 0) + n);
   for (const f of a.flags) for (const t of flagTopics(f)) add(t, f.severity === "high" ? 3 : f.severity === "medium" ? 2 : 0.5);
@@ -216,6 +252,7 @@ export function topicWeights(a: Analysis, history: PracticeRecord[] = [], person
   if (runway !== null && runway < 18) add("runway", 2);
   for (const t of weakTopics(history)) add(t, 1.5);
   if (persona) for (const t of PERSONAS[persona].focus) add(t, 1);
+  if (stage) for (const t of STAGES[stage].focus) add(t, 1);
   return w;
 }
 
@@ -227,8 +264,8 @@ export function weakTopics(history: PracticeRecord[]): Topic[] {
 }
 
 // The questions that matter most for this company, skipping ones already answered well.
-export function selectQuestions(a: Analysis, history: PracticeRecord[] = [], persona?: PersonaId, n = 5): Question[] {
-  const w = topicWeights(a, history, persona);
+export function selectQuestions(a: Analysis, history: PracticeRecord[] = [], persona?: PersonaId, n = 5, stage?: Stage): Question[] {
+  const w = topicWeights(a, history, persona, stage);
   const mastered = new Set(history.filter((r) => gradeQuality(r.grade) >= 0.75).map((r) => r.questionId));
   const preferred = persona ? PERSONAS[persona].questionIds : [];
   return QUESTIONS.filter((q) => !mastered.has(q.id))
@@ -255,17 +292,19 @@ export function selectLessons(lessons: Lesson[], topics: Iterable<Topic>, max = 
 // --- Prompt assembly ---------------------------------------------------------------
 
 export const RULES = [
-  "Use only numbers that appear in COMPANY NUMBERS. Never calculate, estimate or invent a figure. If a number is needed and missing, say it is missing.",
-  "Label figures as Historical, Forecast or Assumption, and name the input each finding comes from.",
-  "Explain in plain language a founder with no finance background understands.",
-  "When you use a benchmark, quote it and name its source.",
-  "Never give investment advice, a valuation, or a recommendation to invest. If asked, say you can't and explain what investors will look at instead.",
-  "Coach, don't just criticise: every weakness comes with a concrete way to improve.",
+  "Answer first, in a sentence or two. Keep chat replies under 120 words unless the founder asks for more. No headings in chat, and no more than three bullets.",
+  "Use only figures from COMPANY NUMBERS. Never calculate, estimate or invent a figure. If a number is missing, say so.",
+  "After a figure, cite its short tag in square brackets, like $1,286,268 [P&L] or 2.0% churn [Pack D3]. Never write file names or full source titles.",
+  "Say when a figure comes from the plan rather than the books, like \"the plan says 22 months [Plan]\".",
+  "If you use an outside benchmark, give its short name, the month it was checked and its link once, like [SaaStr, Oct 2026](url). Benchmarks are context only: never use them to change the company's numbers.",
+  "Never give a valuation, investment advice or a recommendation to invest. If asked, say so and explain what investors will look at instead.",
+  "Coach like a calm, honest partner. Say plainly what is strong and what is weak, and give one concrete fix for each weakness. Don't flatter and don't alarm: confidence comes from knowing the numbers.",
 ];
 
 export interface ContextInput {
   mode: "ask" | "simulate" | "report";
   persona?: PersonaId;
+  stage?: Stage;
   analysis: Analysis;
   history?: PracticeRecord[];
   lessons?: Lesson[];
@@ -273,9 +312,9 @@ export interface ContextInput {
 
 export function buildSystemPrompt(c: ContextInput): string {
   const history = c.history ?? [];
-  const weights = topicWeights(c.analysis, history, c.persona);
+  const weights = topicWeights(c.analysis, history, c.persona, c.stage);
   const topics = [...weights.keys()];
-  const questions = selectQuestions(c.analysis, history, c.persona);
+  const questions = selectQuestions(c.analysis, history, c.persona, 5, c.stage);
   const persona = c.persona ? PERSONAS[c.persona] : undefined;
   const weak = weakTopics(history);
   const recentNotes = history.filter((r) => weak.includes(r.topic)).slice(-3);
@@ -283,20 +322,22 @@ export function buildSystemPrompt(c: ContextInput): string {
 
   const role =
     c.mode === "simulate" && persona
-      ? `You are Vicky playing a ${persona.name} (${persona.cheque}), an investor in a mock fundraising meeting. You evaluate: ${persona.evaluates} You say no when: ${persona.saysNoWhen} ${persona.style}${persona.ownQuestions.length ? ` Questions you like to ask: ${persona.ownQuestions.map((q) => `"${q}"`).join(" ")}` : ""} Ask ONE question at a time. Follow up when an answer is vague or a number does not match COMPANY NUMBERS. After 5 questions, give a scorecard on financial accuracy, clarity and preparedness, with one concrete tip per answer.`
+      ? `You are Vicky playing a ${persona.name} (${persona.cheque}), an investor in a mock fundraising meeting. You evaluate: ${persona.evaluates} You say no when: ${persona.saysNoWhen} ${persona.style}${persona.ownQuestions.length ? ` Questions you like to ask: ${persona.ownQuestions.map((q) => `"${q}"`).join(" ")}` : ""} Ask ONE question at a time and keep each turn to one to three sentences, like a real meeting. Follow up when an answer is vague or a number does not match COMPANY NUMBERS. After 5 questions, give a scorecard on financial accuracy, clarity and preparedness, with one concrete tip per answer.`
       : c.mode === "report"
-        ? "You are Vicky, an AI investor coach. Write a Readiness Report for the founder from COMPANY NUMBERS: the score and what drives it, the riskiest assumptions, and the three actions that would most improve their readiness."
+        ? "You are Vicky, an AI investor coach. Write a short meeting brief from COMPANY NUMBERS: one sentence on where the founder stands, the three things to fix before the meeting (each with its number and the fix), and two things that are genuinely strong. Under 200 words."
         : "You are Vicky, an AI investor coach. Answer the founder's questions about their own financials and how investors will see them.";
 
   const sections = [
     role,
     "RULES\n" + RULES.map((r, i) => `${i + 1}. ${r}`).join("\n"),
+    ...(c.stage ? [`STAGE: ${STAGES[c.stage].label}. Investors at this stage want: ${STAGES[c.stage].wants}`] : []),
+    ...(persona?.basedOn ? [`This investor profile is drawn from ${persona.basedOn.title} [${persona.basedOn.short}](${persona.basedOn.url}). You are not that firm; say so if asked.`] : []),
     "COMPANY NUMBERS (computed by tested code; the only figures you may use)\n" +
-      JSON.stringify({ ...(c.analysis.numbers !== undefined ? { company: c.analysis.numbers } : {}), ...(c.analysis.summary ? { summary: c.analysis.summary } : {}), ...(c.analysis.stress ? { stressTest: c.analysis.stress } : {}), readiness: { score: c.analysis.readiness.score, band: c.analysis.readiness.band, coverage: c.analysis.readiness.coverage, components: c.analysis.readiness.components }, flags: c.analysis.flags }, null, 1),
+      JSON.stringify({ ...(c.analysis.numbers !== undefined ? { company: c.analysis.numbers } : {}), ...(c.analysis.summary ? { summary: c.analysis.summary } : {}), ...(c.analysis.stress ? { stressTest: c.analysis.stress } : {}), readiness: { score: c.analysis.readiness.score, band: c.analysis.readiness.band, coverage: c.analysis.readiness.coverage, components: c.analysis.readiness.components }, flags: c.analysis.flags.map((f) => ({ severity: f.severity, message: f.message, cite: f.source })) }, null, 1),
   ];
 
   const benchmarks = selectBenchmarks(topics);
-  if (benchmarks.length) sections.push("BENCHMARKS (quote with source)\n" + benchmarks.map((b) => `- ${b.statement} Source: ${b.source.name} (${b.source.url})`).join("\n"));
+  if (benchmarks.length) sections.push("BENCHMARKS (quote with source)\n" + benchmarks.map((b) => `- ${b.statement} [${b.source.short}, ${b.source.checked}](${b.source.url})`).join("\n"));
 
   if (questions.length) {
     sections.push(
@@ -306,7 +347,7 @@ export function buildSystemPrompt(c: ContextInput): string {
   }
 
   const resources = selectResources(topics);
-  if (resources.length) sections.push("PUBLIC SOURCES (link to these; never cite an unsourced benchmark)\n" + resources.map((r) => `- ${r.title}, ${r.publisher}: ${r.url}`).join("\n"));
+  if (resources.length) sections.push("PUBLIC SOURCES (link to these; never cite an unsourced benchmark)\n" + resources.map((r) => `- ${r.title} [${r.publisher}, ${RESOURCES_CHECKED}](${r.url})`).join("\n"));
 
   if (recentNotes.length) {
     sections.push("FOUNDER'S WEAK SPOTS FROM PAST PRACTICE (revisit these)\n" + recentNotes.map((r) => `- ${r.topic}: ${r.coachingNote}`).join("\n"));

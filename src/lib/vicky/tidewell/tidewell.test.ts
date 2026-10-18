@@ -6,6 +6,9 @@ import { auditAssumptions, auditFlags } from "./audit.ts";
 import { checkDeckClaims } from "./claims.ts";
 import { INCOME_STATEMENT } from "./incomeStatement.ts";
 import { checkIncomeStatement, computeMetrics } from "./metrics.ts";
+import { meetingBrief } from "./brief.ts";
+import { SOURCE_KEY, shortRef } from "./refs.ts";
+import { storyChecks } from "./story.ts";
 
 // Expected values are the figures the organisers publish in Supporting
 // Resources, Appendices D, H and I, computed from the same CSV.
@@ -93,4 +96,52 @@ test("a founder quoting the deck's numbers gets caught", () => {
   assert.deepEqual(checks.map((c) => c.metric), ["ARR", "monthly churn"]);
   assert.equal(checks[0]!.stated, 1_370_000);
   assert.equal(checks[0]!.actual, 1_286_268);
+});
+
+test("sources shorten to tags a reader can scan", () => {
+  assert.equal(shortRef("01_income_statement_monthly_actuals.csv"), "P&L");
+  assert.equal(shortRef("Supporting Resources, Appendix D Q3 (from 05_customers.csv)"), "Pack D3");
+  assert.equal(shortRef("Supporting Resources, Appendix A (case overview), founders' draft deck"), "Deck");
+  assert.equal(shortRef("Supporting Resources, Appendix C (founders' forecast), forecast by quarter"), "Plan");
+  for (const tag of ["P&L", "Deck", "Plan", "Pack D"]) assert.ok(SOURCE_KEY[tag]);
+});
+
+test("story checks catch the plan outrunning the history", () => {
+  const checks = storyChecks(m);
+  const byId = Object.fromEntries(checks.map((c) => [c.id, c]));
+  assert.ok(byId["customers"]!.gap > 2.5, "plan adds ~2.7x the best quarter");
+  assert.match(byId["growth"]!.plan, /15\.7% a month in Q1 2027/);
+  assert.equal(byId["hires"]!.severity, "high");
+  assert.equal(checks[0]!.severity, "high");
+});
+
+test("chart data lines up with the metrics", () => {
+  const a = analyzeTidewell();
+  const sep = a.charts.mrr.find((p) => p.month === "2026-09")!;
+  assert.equal(sep.actual, 107_189);
+  assert.equal(sep.plan, 107_189);
+  assert.equal(a.charts.mrr.find((p) => p.month === "2028-03")!.plan, 426_000);
+  assert.equal(a.charts.growth.length, 12);
+  assert.equal(a.charts.customers.filter((c) => c.kind === "plan").length, 6);
+  assert.deepEqual(a.charts.runway.map((r) => r.months), [24, 22, 17, 8.3]);
+  assert.equal(a.charts.deckVsData.find((d) => d.id === "arr")!.data, 1_286_268);
+});
+
+test("the meeting brief changes with the investor and always has ten questions", () => {
+  const yc = meetingBrief("yc", "seed");
+  const a16z = meetingBrief("a16z", "series-a");
+  assert.equal(yc.questions.length, 10);
+  assert.equal(a16z.questions.length, 10);
+  assert.ok(yc.tighten.length <= 5 && yc.tighten.every((t) => t.refs.length > 0 && t.refs.length <= 3));
+  assert.ok(a16z.tighten.some((t) => t.id === "claim-gross-margin"), "a16z cares how margin is defined");
+  assert.ok(yc.questions.every((q) => q.youWouldSay && q.numbersSupport));
+  assert.match(yc.headline, /5 of 9 deck claims/);
+});
+
+test("the prompt uses short tags, the stage and the investor's public source", () => {
+  const p = buildSystemPrompt({ mode: "simulate", persona: "a16z", stage: "series-a", analysis: toKnowledgeAnalysis(analyzeTidewell()) });
+  assert.match(p, /STAGE: Series A/);
+  assert.match(p, /a16z\.com\/16-startup-metrics/);
+  assert.match(p, /"cite": \[\s*"P&L"\s*\]/);
+  assert.doesNotMatch(p, /"source":/);
 });

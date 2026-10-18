@@ -34,7 +34,7 @@ test("every benchmark and resource has a source link and every question id is un
 test("each investor type asks questions that exist", () => {
   const ids = new Set(QUESTIONS.map((q) => q.id));
   for (const p of Object.values(PERSONAS)) for (const id of p.questionIds) assert.ok(ids.has(id), `${p.id} → ${id}`);
-  assert.equal(Object.keys(PERSONAS).length, 5);
+  assert.equal(Object.keys(PERSONAS).length, 7);
 });
 
 test("the chosen investor's own questions come first", () => {

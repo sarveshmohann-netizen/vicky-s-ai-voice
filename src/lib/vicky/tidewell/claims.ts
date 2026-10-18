@@ -66,7 +66,7 @@ export function checkDeckClaims(metrics: Record<string, Metric> = computeMetrics
         const c6 = get("logoChurnMonthly6m").value;
         const ok = claimed >= Math.min(c12, c6) * (1 - CLAIM_TOLERANCE);
         return { ...base, status: ok ? "Holds" : "Fix", dataShows: `${pct(c12)} a month over 12 months, ${pct(c6)} over the last 6`,
-          why: ok ? "Matches the data." : "Lower than churn in any period in the data. Give both numbers rather than calling churn improving on six months of data.",
+          why: ok ? "Matches the data." : "Churn has never been this low. Quote both the 12-month and 6-month numbers; six months is too short to call a trend.",
           sources: src("logoChurnMonthly12m", "logoChurnMonthly6m") };
       }
       case "nrr": {
