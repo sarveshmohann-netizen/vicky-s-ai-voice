@@ -36,8 +36,7 @@ export const chatInput = founderInput.extend({
   stage: stageSchema.default("seed"),
   messages: z
     .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(20000) }))
-    .min(1)
-    .max(100),
+    .min(1),
 });
 export const gradeInput = founderInput.extend({
   company_id: z.string().uuid().nullable().optional(),

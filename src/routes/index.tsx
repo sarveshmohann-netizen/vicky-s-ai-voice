@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, ChevronDown } from "lucide-react";
-import { AppHeader, Loading } from "@/components/vicky/AppShell";
+import { AppHeader, Loading, SessionGate } from "@/components/vicky/AppShell";
 import { ContextBar } from "@/components/vicky/ContextBar";
 import { Button } from "@/components/ui/button";
 import { MetricsDialog } from "@/components/vicky/MetricsDialog";
@@ -39,7 +39,13 @@ function Dashboard() {
       <>
         <AppHeader />
         <ContextBar />
-        <main className="p-6">{error ? <p role="alert">{error.message}</p> : <Loading />}</main>
+        <main className="p-6">
+          {error ? (
+            <p role="alert">{error.message}</p>
+          ) : (
+            <SessionGate>{() => <Loading />}</SessionGate>
+          )}
+        </main>
       </>
     );
   const { analysis, brief } = data;
