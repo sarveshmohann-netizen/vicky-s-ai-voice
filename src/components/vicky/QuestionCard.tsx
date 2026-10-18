@@ -1,47 +1,21 @@
 import { useState } from 'react';
-import { createFileRoute, Link } from '@tanstack/react-router';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { AppShell, Loading } from '@/components/vicky/AppShell';
-import { Markdown } from '@/components/vicky/Markdown';
+import { Markdown } from './Markdown';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { getPracticeQuestions, vickyGrade } from '@/lib/vicky.functions';
+import { vickyGrade } from '@/lib/vicky.functions';
 import { withinTolerance } from '@/lib/vicky/readiness';
 import type { Question } from '@/lib/vicky/knowledge';
 
-export const Route = createFileRoute('/prepare')({
-  head: () => ({ meta: [
-    { title: 'Prepare the Founder · Vicky by June Analytics' },
-    { name: 'description', content: 'Practise the questions investors will ask and get your answers graded against Tidewell’s data.' },
-    { property: 'og:title', content: 'Prepare the Founder · Vicky by June Analytics' },
-    { property: 'og:description', content: 'Draft answers to investor questions and get a rubric score with coaching.' },
-    { property: 'og:type', content: 'website' },
-    { name: 'twitter:card', content: 'summary' },
-  ] }),
-  component: () => <AppShell eyebrow="Practice" title="Prepare the Founder" intro="Five questions chosen for Tidewell’s weakest spots. Draft an answer and Vicky grades it on evidence, clarity, accuracy and ownership.">
-    {id => <Practice founderId={id} />}
-  </AppShell>,
-});
-
-function Practice({ founderId }: { founderId: string }) {
-  const q = useQuery({ queryKey: ['questions', founderId], queryFn: () => getPracticeQuestions({ data: { founder_id: founderId } }), staleTime: Infinity });
-  if (q.isPending) return <Loading label="Choosing your questions…" />;
-  if (q.isError) return <p role="alert" className="text-destructive">{q.error.message}</p>;
-  return <div className="space-y-6">
-    {q.data.map((question, i) => <QuestionCard key={question.id} n={i + 1} question={question} founderId={founderId} />)}
-    <p className="text-sm text-muted-foreground">After grading, revisit <Link to="/" className="font-medium text-accent underline">Analyze the Numbers</Link> to see your readiness score update.</p>
-  </div>;
-}
-
 const CRITERIA = ['evidence', 'clarity', 'accuracy', 'ownership'] as const;
 
-function QuestionCard({ n, question, founderId }: { n: number; question: Question; founderId: string }) {
+export function QuestionCard({ n, question, founderId }: { n: number; question: Question; founderId: string }) {
   const [answer, setAnswer] = useState('');
   const qc = useQueryClient();
   const grade = useMutation({
     mutationFn: () => vickyGrade({ data: { founder_id: founderId, questionId: question.id, answer } }),
-    onSuccess: r => { if (!('error' in r)) void qc.invalidateQueries({ queryKey: ['analysis'] }); },
+    onSuccess: r => { if (!('error' in r)) void qc.invalidateQueries({ queryKey: ['analysis'] }); void qc.invalidateQueries({ queryKey: ['meeting-brief'] }); },
   });
   const r = grade.data;
   return <article className="rounded-lg border border-border bg-card">
