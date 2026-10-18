@@ -106,6 +106,7 @@ export function SavedChat({
   }, []);
   async function restore() {
     const data = await loadConversation({ data: { id: conversation.id } });
+    setOutput("");
     setMessages(data.messages);
     cache.setQueryData(["conversation", conversation.id], data);
     await cache.invalidateQueries({ queryKey: ["conversations"] });
