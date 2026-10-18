@@ -24,7 +24,7 @@ vi.mock('@/lib/companies.functions', () => ({ getCompanyDashboard: vi.fn() }));
 it('preserves hook order across sign-in, investor changes, company selection and sign-out', async () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-  const { result, rerender, unmount } = renderHook(({ persona, company_id }: { persona: 'lead-seed' | 'yc'; company_id?: string }) => useVickyDashboard({ persona, stage: 'seed', company_id }), { wrapper, initialProps: { persona: 'lead-seed' as 'lead-seed' | 'yc', company_id: undefined as string | undefined } });
+  const { result, rerender, unmount } = renderHook(({ persona, company_id }: { persona: 'lead-seed' | 'yc'; company_id: string | undefined }) => useVickyDashboard({ persona, stage: 'seed', company_id }), { wrapper, initialProps: { persona: 'lead-seed' as 'lead-seed' | 'yc', company_id: undefined as string | undefined } });
   expect(result.current.data?.brief.lens.persona).toBe('lead-seed');
   act(() => auth.listener('SIGNED_IN', { user: { id: '6997c3be-193f-4536-90da-7e2bf8c4c0a3' } } as Session));
   await waitFor(() => expect(result.current.session?.user.id).toBe('6997c3be-193f-4536-90da-7e2bf8c4c0a3'));
