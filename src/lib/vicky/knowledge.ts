@@ -7,6 +7,7 @@
 
 import type { Summary, StressResult } from "./model.ts";
 import type { AnswerGrade, AssumptionFlag, FactCheck, ReadinessResult } from "./readiness.ts";
+import { CHART_CATALOG, type ChartId, type PrepItem, type ScenarioInput } from "./coach.ts";
 
 export type Topic = "growth" | "retention" | "churn" | "cac" | "burn" | "runway" | "margin" | "use-of-funds" | "team" | "market" | "concentration" | "valuation";
 
@@ -302,7 +303,7 @@ export function selectLessons(lessons: Lesson[], topics: Iterable<Topic>, max = 
 // --- Prompt assembly ---------------------------------------------------------------
 
 export const RULES = [
-  "Answer first, in a sentence or two. Keep chat replies under 120 words unless the founder asks for more. No headings in chat, and no more than three bullets.",
+  "Lead with the answer and the number behind it. Then say plainly where it falls short of what this investor wants, if it does, and give two or three concrete steps to take before the meeting. Aim for 80 to 160 words and stop once the founder has what they need. No headings in chat, and no more than three bullets.",
   "Use only figures from COMPANY NUMBERS. Never calculate, estimate or invent a figure. If a number is missing, say so.",
   "After a figure, cite its short tag in square brackets, like $1,286,268 [P&L] or 2.0% churn [Pack D3]. Never write file names or full source titles.",
   "Say when a figure comes from the plan rather than the books, like \"the plan says 22 months [Plan]\".",
@@ -319,7 +320,20 @@ export interface ContextInput {
   analysis: Analysis;
   history?: PracticeRecord[];
   lessons?: Lesson[];
+  coach?: CoachContext; // ask mode: charts the reply can show, the prep plan and the what-if base
 }
+
+export interface CoachContext {
+  charts: ChartId[];
+  plan: PrepItem[];
+  scenarioBase: ScenarioInput | null;
+}
+
+export const COACH_RULES = [
+  "When one of CHARTS backs your answer, put its tag on its own line after the sentence it supports, like [[chart:mrr]]. Use at most one chart per reply, and only one from the list.",
+  "When the founder asks a what-if about growth, spending, margin or the raise, add one tag like [[scenario growth=8% spend=250000 raise=4000000 months=24]] with only the values they changed. The app runs the model from SCENARIO BASE and shows the result under your reply, so don't state the outcome yourself; tell them what to look at in it.",
+  "When PREP PLAN covers the topic, use its steps, adapted to the question. Don't repeat the whole plan.",
+];
 
 export function buildSystemPrompt(c: ContextInput): string {
   const history = c.history ?? [];
@@ -346,6 +360,16 @@ export function buildSystemPrompt(c: ContextInput): string {
     "COMPANY NUMBERS (computed by tested code; the only figures you may use)\n" +
       JSON.stringify({ ...(c.analysis.numbers !== undefined ? { company: c.analysis.numbers } : {}), ...(c.analysis.summary ? { summary: c.analysis.summary } : {}), ...(c.analysis.stress ? { stressTest: c.analysis.stress } : {}), readiness: { score: c.analysis.readiness.score, band: c.analysis.readiness.band, coverage: c.analysis.readiness.coverage, components: c.analysis.readiness.components }, flags: c.analysis.flags.map((f) => ({ severity: f.severity, message: f.message, cite: f.source })) }, null, 1),
   ];
+
+  if (c.coach && c.mode === "ask") {
+    const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
+    const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
+    sections.push("SHOWING CHARTS AND MODELS\n" + COACH_RULES.map((r) => `- ${r}`).join("\n"));
+    if (c.coach.charts.length) sections.push("CHARTS (from the founder's dashboard)\n" + c.coach.charts.map((id) => `- [[chart:${id}]] ${CHART_CATALOG[id].title}: ${CHART_CATALOG[id].shows}`).join("\n"));
+    const b = c.coach.scenarioBase;
+    if (b) sections.push(`SCENARIO BASE (today's numbers; the model starts here)\nMRR ${usd(b.startMrr)}, growth ${pct(b.monthlyGrowth)} a month, gross margin ${pct(b.grossMargin)}, spend ${usd(b.monthlySpend)} a month, cash ${usd(b.cash)}, raise ${usd(b.raise)}, ${b.months} months.`);
+    if (c.coach.plan.length) sections.push("PREP PLAN (what to work on first for this investor)\n" + c.coach.plan.map((p) => `- ${p.title}. Now: ${p.now}${p.bar ? `. Bar: ${p.bar}` : ""}\n  Steps: ${p.steps.join(" ")}`).join("\n"));
+  }
 
   const benchmarks = selectBenchmarks(topics);
   if (benchmarks.length) sections.push("BENCHMARKS (quote with source)\n" + benchmarks.map((b) => `- ${b.statement} [${b.source.short}, ${b.source.checked}](${b.source.url})`).join("\n"));
