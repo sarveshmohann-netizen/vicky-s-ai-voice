@@ -51,7 +51,7 @@ export const vickyGrade = createServerFn({ method: 'POST' }).middleware([require
     setResponseHeader('Cache-Control', 'no-store');
     let gradeData = data;
     if (data.conversation_id) {
-      const { data:conversation,error } = await context.supabase.from('conversations').select('id,mode').eq('id',data.conversation_id).eq('founder_id',id).single();
+      const { data:conversation,error } = await context.supabase.from('conversations').select('id,mode,company_id').eq('id',data.conversation_id).eq('founder_id',id).single();
       if (error || conversation?.mode !== 'simulate') throw new Error('Open your own mock meeting to grade an answer.');
       const records = await context.supabase.from('messages').select('*').eq('conversation_id',conversation.id).order('created_at').order('id');
       if (records.error) throw new Error('Could not load the answer.');
@@ -59,7 +59,7 @@ export const vickyGrade = createServerFn({ method: 'POST' }).middleware([require
       if (!pair) throw new Error('Answer an investor question first.');
       const question = closestQuestion(pair.question.content);
       if (!question) throw new Error('No practice rubric is available.');
-      gradeData = { ...data, questionId:question.id, answer:pair.answer.content, investorQuestion:pair.question.content };
+      gradeData = { ...data, company_id:conversation.company_id, questionId:question.id, answer:pair.answer.content, investorQuestion:pair.question.content };
     }
     const result = await gradeForFounder(context.supabase,id,gradeData);
     if (data.conversation_id && !('error' in result)) {

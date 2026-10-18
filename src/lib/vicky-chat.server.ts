@@ -7,6 +7,7 @@ import { toKnowledgeAnalysis } from './vicky/tidewell/analysis';
 import { createVickyAI, safeAIError, VickyAIError } from './vicky-ai.server';
 import { withLovableAiGatewayRunIdHeader } from './ai/run-id.server';
 import { turnSchema, isGradeMessage } from './conversations';
+import { loadCompanyContext } from './companies.server';
 
 export async function handleVickyChat(request: Request) {
   const token = request.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
@@ -35,11 +36,12 @@ export async function handleVickyChat(request: Request) {
       if (prepareError) return Response.json({ error: 'Could not save this message. Reload the chat and try again.' }, { status: 409 });
       const turn = turnSchema.parse(prepared);
       version = turn.conversation.updated_at;
-      input = { ...input, mode:turn.conversation.mode, persona:turn.conversation.persona, stage:turn.conversation.stage,
+      input = { ...input, company_id:turn.conversation.company_id ?? null, mode:turn.conversation.mode, persona:turn.conversation.persona, stage:turn.conversation.stage,
         messages:turn.messages.filter(m => !isGradeMessage(m)).slice(-100).map(({ role,content }) => ({ role,content })) };
     }
-    const { analysis, history, lessons } = await loadFounderData(client, id, true);
-    const system = buildSystemPrompt({ mode: input.mode, stage: input.stage, ...(input.persona ? { persona: input.persona } : {}), analysis: toKnowledgeAnalysis(analysis), history, lessons });
+    const context = input.company_id ? await loadCompanyContext(client, id, input.company_id, true) : await loadFounderData(client, id, true);
+    const analysis = 'knowledge' in context ? context.knowledge : toKnowledgeAnalysis(context.analysis);
+    const system = buildSystemPrompt({ mode: input.mode, stage: input.stage, ...(input.persona ? { persona: input.persona } : {}), analysis, history:context.history, lessons:context.lessons, ...(input.company_id ? { workedExamples: false } : {}) });
     const ai = createVickyAI();
     const result = ai.stream(system, input.messages, request.signal);
     // Read the first event before sending headers, so upstream denials retain status.

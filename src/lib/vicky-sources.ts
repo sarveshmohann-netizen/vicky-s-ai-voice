@@ -1,6 +1,7 @@
 import { SOURCE_KEY } from './vicky/tidewell/refs';
 
 export function sourceDescription(tag: string) {
+  if (tag === 'You') return 'Numbers you entered in Company details';
   return SOURCE_KEY[tag] ?? SOURCE_KEY[tag.replace(/(Pack [A-Z])\d+$/, '$1')];
 }
 
