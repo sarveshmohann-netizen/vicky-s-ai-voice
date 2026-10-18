@@ -36,6 +36,7 @@ export interface Question {
   topics: Topic[];
   question: string;
   testing: string; // why the investor asks
+  genericQuestion?: string; // wording for companies other than Tidewell
   weakAnswer?: string; // what an unprepared founder says
   strongAnswer: string; // the shape of a strong answer, not a script
 }
@@ -44,7 +45,16 @@ export interface Question {
 // the order investors usually ask them. Strong answers quote Tidewell's own
 // numbers, which tidewell/metrics.ts reproduces.
 const D = (n: number, id: string, topics: Topic[], question: string, testing: string, weakAnswer: string, strongAnswer: string): Question =>
-  ({ id, number: n, topics, question, testing, weakAnswer, strongAnswer });
+  ({ id, number: n, topics, question, testing, weakAnswer, strongAnswer, ...(GENERIC[id] ? { genericQuestion: GENERIC[id] } : {}) });
+
+const GENERIC: Record<string, string> = {
+  "forecast-assumptions": "Your forecast grows faster than your history. What has to change to make that happen?",
+  concentration: "How dependent are you on your largest customer?",
+  runway: "Why this amount, and how long does it last?",
+  tam: "Where does your market size come from?",
+  competition: "Why will you win against the bigger competitors?",
+  milestones: "What will this round get you to, and what's the biggest risk?",
+};
 
 export const QUESTIONS: Question[] = [
   D(1, "arr", ["growth"], "What is your ARR, and how do you calculate it?", "Whether the founder knows the difference between recurring and one-time revenue.", "$1.37M.", "$1.29M. That's September MRR of $107,189 times 12. We leave out onboarding fees because they don't repeat. They were $108,600 over the last 12 months."),
@@ -305,6 +315,7 @@ export interface ContextInput {
   mode: "ask" | "simulate" | "report";
   persona?: PersonaId;
   stage?: Stage;
+  workedExamples?: boolean; // false for uploaded companies: the pack's example answers are about Tidewell
   analysis: Analysis;
   history?: PracticeRecord[];
   lessons?: Lesson[];
@@ -322,7 +333,7 @@ export function buildSystemPrompt(c: ContextInput): string {
 
   const role =
     c.mode === "simulate" && persona
-      ? `You are Vicky playing a ${persona.name} (${persona.cheque}), an investor in a mock fundraising meeting. You evaluate: ${persona.evaluates} You say no when: ${persona.saysNoWhen} ${persona.style}${persona.ownQuestions.length ? ` Questions you like to ask: ${persona.ownQuestions.map((q) => `"${q}"`).join(" ")}` : ""} Ask ONE question at a time and keep each turn to one to three sentences, like a real meeting. Follow up when an answer is vague or a number does not match COMPANY NUMBERS. After 5 questions, give a scorecard on financial accuracy, clarity and preparedness, with one concrete tip per answer.`
+      ? `You are Vicky playing a ${persona.name} (${persona.cheque}), an investor in a mock fundraising meeting. You evaluate: ${persona.evaluates} You say no when: ${persona.saysNoWhen} ${persona.style}${persona.ownQuestions.length && c.workedExamples !== false ? ` Questions you like to ask: ${persona.ownQuestions.map((q) => `"${q}"`).join(" ")}` : ""} Ask ONE question at a time and keep each turn to one to three sentences, like a real meeting. Follow up when an answer is vague or a number does not match COMPANY NUMBERS. After 5 questions, give a scorecard on financial accuracy, clarity and preparedness, with one concrete tip per answer.`
       : c.mode === "report"
         ? "You are Vicky, an AI investor coach. Write a short meeting brief from COMPANY NUMBERS: one sentence on where the founder stands, the three things to fix before the meeting (each with its number and the fix), and two things that are genuinely strong. Under 200 words."
         : "You are Vicky, an AI investor coach. Answer the founder's questions about their own financials and how investors will see them.";
@@ -342,7 +353,9 @@ export function buildSystemPrompt(c: ContextInput): string {
   if (questions.length) {
     sections.push(
       (c.mode === "simulate" ? "QUESTIONS TO ASK, in this order of priority" : "WHAT INVESTORS WILL PROBE FOR THIS COMPANY") + "\n" +
-        questions.map((q) => `- [${q.id}] ${q.question}\n  Why they ask: ${q.testing}${q.weakAnswer ? `\n  A weak answer: ${q.weakAnswer}` : ""}\n  A strong answer: ${q.strongAnswer}`).join("\n"),
+        questions.map((q) => c.workedExamples === false
+          ? `- [${q.id}] ${q.genericQuestion ?? q.question}\n  Why they ask: ${q.testing}`
+          : `- [${q.id}] ${q.question}\n  Why they ask: ${q.testing}${q.weakAnswer ? `\n  A weak answer: ${q.weakAnswer}` : ""}\n  A strong answer: ${q.strongAnswer}`).join("\n"),
     );
   }
 
