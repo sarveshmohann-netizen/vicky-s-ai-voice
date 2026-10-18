@@ -449,9 +449,9 @@ export function SavedChat({
         <ConversationScrollButton />
       </Transcript>
       <div className="mx-auto w-full max-w-3xl px-4 pb-5 md:px-8">
-        {error && (
+        {(error || speech.error) && (
           <p role="alert" className="mb-3 text-sm text-destructive">
-            {error}
+            {error || speech.error}
           </p>
         )}
         {conversation.mode === "simulate" && pair && (
@@ -480,8 +480,10 @@ export function SavedChat({
           <PromptInputFooter className="justify-between">
             {speech.supported ? (
               <Button
+                type="button"
                 variant="ghost"
                 size="icon-sm"
+                aria-pressed={speech.listening}
                 aria-label={speech.listening ? "Stop dictation" : "Dictate message"}
                 disabled={busy}
                 onClick={speech.dictate}
@@ -497,7 +499,7 @@ export function SavedChat({
               </span>
             )}
             {speech.speaking && (
-              <Button variant="ghost" size="sm" onClick={speech.stop}>
+              <Button type="button" variant="ghost" size="sm" onClick={speech.stop}>
                 Stop
               </Button>
             )}

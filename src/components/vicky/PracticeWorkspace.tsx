@@ -74,7 +74,24 @@ function Workspace({
   const cache = useQueryClient();
   const dashboard = useVickyDashboard(search);
   const [questionsOpen, setQuestionsOpen] = useState(false);
-  const [voice, setVoice] = useState(false);
+  // Starting a chat moves to a new route and remounts this component, so the
+  // Voice switch is remembered across that move instead of resetting to off.
+  const [voice, setVoiceState] = useState(false);
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem("vicky-voice") === "on") setVoiceState(true);
+    } catch {
+      // Storage can be blocked; Voice then starts off.
+    }
+  }, []);
+  const setVoice = (on: boolean) => {
+    setVoiceState(on);
+    try {
+      window.localStorage.setItem("vicky-voice", on ? "on" : "off");
+    } catch {
+      // Private windows can block storage; the switch still works for this page.
+    }
+  };
   const [speaking, setSpeaking] = useState(false);
   const [draft, setDraft] = useState("");
   const navigate = useNavigate();
@@ -418,7 +435,12 @@ function Workspace({
               </div>
             </div>
             <div className="mx-auto w-full max-w-3xl px-5 pb-5">
-              <PromptInput onSubmit={({ text }) => newChat(text)}>
+              {speech.error && (
+                <p role="alert" className="mb-3 text-sm text-destructive">
+                  {speech.error}
+                </p>
+              )}
+              <PromptInput onSubmit={({ text }) => (text.trim() ? newChat(text) : undefined)}>
                 <PromptInputTextarea
                   aria-label="Message"
                   placeholder="Ask about your numbers…"
@@ -428,12 +450,14 @@ function Workspace({
                 <PromptInputFooter className="justify-between">
                   {speech.supported ? (
                     <Button
+                      type="button"
                       size="icon-sm"
                       variant="ghost"
+                      aria-pressed={speech.listening}
                       aria-label={speech.listening ? "Stop dictation" : "Dictate message"}
                       onClick={speech.dictate}
                     >
-                      <Mic />
+                      <Mic className={speech.listening ? "text-destructive" : ""} />
                     </Button>
                   ) : (
                     <span title="Voice input works in Chrome, Edge and Safari" />

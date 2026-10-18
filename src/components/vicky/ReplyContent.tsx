@@ -15,9 +15,13 @@ import {
 import { glossary, glossaryMatchers } from "@/lib/vicky/glossary";
 import type { Metric } from "@/lib/vicky/tidewell/metrics";
 import { sourceTags, chatHeadingParagraphs } from "./Markdown";
+import { extractCitations } from "@/lib/reply-citations";
+import { sourceDescription } from "@/lib/vicky-sources";
 import { SourceChip } from "./Sources";
 import { ExternalLink } from "lucide-react";
 import { EngineChart } from "./EngineChart";
+import { ChartTooltip } from "./ChartTooltip";
+import { formatValue } from "@/lib/chart-format";
 import type { meetingSearchSchema } from "@/lib/vicky-inputs";
 import type { z } from "zod";
 type Choice = z.infer<typeof meetingSearchSchema>;
@@ -102,16 +106,37 @@ function ScenarioCard({
       <div className="mt-4 h-[200px]" role="img" aria-label="What-if MRR and cash">
         <ResponsiveContainer>
           <LineChart data={result.points}>
-            <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-            <YAxis
-              tick={{ fontSize: 10 }}
-              tickFormatter={(v) =>
-                new Intl.NumberFormat("en", { notation: "compact" }).format(Number(v))
-              }
+            <XAxis
+              dataKey="month"
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              tickFormatter={(v) => (Number(v) === 0 ? "Now" : `M${v}`)}
+              minTickGap={20}
+              axisLine={false}
+              tickLine={false}
             />
-            <Tooltip />
-            <Line dataKey="mrr" stroke="var(--primary)" dot={false} isAnimationActive={false} />
-            <Line dataKey="cash" stroke="var(--success)" dot={false} isAnimationActive={false} />
+            <YAxis
+              width={56}
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              tickFormatter={(v) => formatValue(Number(v), "usd", { compact: true })}
+              axisLine={false}
+              tickLine={false}
+            />
+            <Tooltip content={<ChartTooltip kind="usd" />} />
+            <Line
+              dataKey="mrr"
+              stroke="var(--chart-1)"
+              strokeWidth={2.5}
+              dot={false}
+              isAnimationActive={false}
+            />
+            <Line
+              dataKey="cash"
+              stroke="var(--chart-4)"
+              strokeWidth={2}
+              strokeDasharray="6 4"
+              dot={false}
+              isAnimationActive={false}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -138,9 +163,11 @@ export function ReplyContent({
   streaming?: boolean;
 }) {
   const terms = glossary(metrics);
+  // Citations come out of the sentences and are listed once under the reply.
+  const cited = extractCitations(text);
   return (
     <>
-      {parseReply(text).map((part, i) =>
+      {parseReply(cited.body).map((part, i) =>
         part.type === "chart" ? (
           <EngineChart key={i} id={part.id} charts={charts} inline />
         ) : part.type === "scenario" ? (
@@ -200,6 +227,62 @@ export function ReplyContent({
           </MessageResponse>
         ),
       )}
+      {!streaming && (cited.sources.length > 0 || cited.links.length > 0) && (
+        <ReplySources sources={cited.sources} links={cited.links} />
+      )}
     </>
+  );
+}
+
+const FRIENDLY: Record<string, string> = {
+  "P&L": "Your P&L",
+  You: "Numbers you entered",
+  Deck: "Your deck",
+  Plan: "Your forecast",
+  Vicky: "Vicky's calculation",
+};
+
+function ReplySources({
+  sources,
+  links,
+}: {
+  sources: string[];
+  links: { label: string; url: string }[];
+}) {
+  return (
+    <footer className="mt-4 border-t border-border pt-3">
+      <h4 className="mb-2 text-xs font-semibold text-muted-foreground">Sources</h4>
+      <ul className="flex flex-wrap gap-2 text-xs">
+        {sources.map((tag) => (
+          <li key={tag}>
+            <HoverCard openDelay={150}>
+              <HoverCardTrigger asChild>
+                <button
+                  type="button"
+                  className="min-h-7 rounded-full border border-border bg-secondary px-3 py-1 text-secondary-foreground"
+                >
+                  {FRIENDLY[tag] ?? tag.replace(/^Pack ([A-Z])\d*$/, "Data pack, Appendix $1")}
+                </button>
+              </HoverCardTrigger>
+              <HoverCardContent className="text-xs">{sourceDescription(tag)}</HoverCardContent>
+            </HoverCard>
+          </li>
+        ))}
+        {links.map((l) => (
+          <li key={l.url}>
+            <a
+              href={l.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-7 items-center gap-1 rounded-full border border-border px-3 py-1 text-primary hover:bg-secondary"
+            >
+              {l.label}
+              <ExternalLink aria-hidden className="size-3" />
+              <span className="sr-only">(opens in a new tab)</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </footer>
   );
 }
